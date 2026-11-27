@@ -417,9 +417,10 @@ function propCard(p) {
   const f = propFin(p), open = S.ui.open === p.id, b = `properties:${p.id}`;
   const free = S.tenants.filter(t => !tenantUnit(t.id));
   const head = `<div class="row sp"><div><h2 style="margin:0">${esc(p.name)}</h2><span class="small">${esc(p.address)} · ${f.rooms} unit${f.rooms === 1 ? '' : 's'} · ${money(f.rent)} rent · <b class="${f.cash >= 0 ? 'pos' : 'neg'}">${money(f.cash)} left over</b> a month</span></div><button class="btn sec" data-act="openProp" data-arg="${p.id}" aria-expanded="${open}">${open ? 'Close' : 'Open and edit'}</button></div>`;
+  if (p.setup) return setupCard(p);
   if (!open) return `<div class="card">${head}</div>`;
   return `<div class="card">${head}
-  <h3>The basics</h3><div class="form">${field('Name', txt(b + '.name', p.name))}${field('Address', txt(b + '.address', p.address))}${field('What it is worth today ($)', num(b + '.value', p.value))}${field('Cash we put in ($) — down payment + renovations', num(b + '.invested', p.invested))}</div>
+  <h3>The basics</h3><div class="form">${field('Name', txt(b + '.name', p.name))}${field('Address', addrInput(b + '.address', p.address))}${field('What it is worth today ($)', num(b + '.value', p.value))}${field('Cash we put in ($) — down payment + renovations', num(b + '.invested', p.invested))}</div>
   <h3>Mortgage</h3><div class="form">${field('Amount still owed ($)', num(b + '.mortgage.balance', p.mortgage.balance))}${field('Interest rate (%)', num(b + '.mortgage.rate', p.mortgage.rate))}${field('Years left to pay', num(b + '.mortgage.years', p.mortgage.years))}${field('Monthly payment ($) — leave 0 to calculate', num(b + '.mortgage.payment', p.mortgage.payment))}</div>
   <div class="note">Payment <b>${money(f.pay)}</b> a month. Of that, <b>${money(f.interest)}</b> is interest (gone) and <b>${money(f.principal)}</b> pays down the loan (you keep it as equity).</div>
   <h3>Bills and expenses</h3><div class="tw"><table><tr><th>What</th><th class="n">Amount ($)</th><th>How often</th><th></th></tr>
@@ -427,7 +428,7 @@ function propCard(p) {
   <tr><td colspan="4"><button class="btn ghost" data-act="addExp" data-arg="${p.id}">＋ Add a bill</button> <span class="small">Total: ${money(f.opex)} a month</span></td></tr></table></div>
   <h3>Rooms / units</h3><div class="tw"><table><tr><th>Name</th>${p.floors.length ? '<th>Floor</th>' : ''}<th class="n">Rent now ($)</th><th class="n">Market rent ($)</th><th>Who lives there</th><th></th></tr>
   ${unitsOf(p.id).map(u => `<tr><td>${txt(`units:${u.id}.name`, u.name)}</td>${p.floors.length ? `<td>${sel(`units:${u.id}.floor`, u.floor, [['', '—'], ...p.floors.map(x => [x.id, x.name])])}</td>` : ''}<td class="n">${num(`units:${u.id}.rent`, u.rent, 100)}</td><td class="n">${num(`units:${u.id}.market`, u.market, 100)}</td><td>${sel(`units:${u.id}.tenant`, u.tenant, [['', '— empty —'], ...S.tenants.filter(t => t.id === u.tenant || free.includes(t)).map(t => [t.id, t.name])])}</td><td><button class="btn del" data-act="delUnit" data-arg="${u.id}" data-confirm="1">Remove</button></td></tr>`).join('')}
-  <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
+  <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <button class="btn ghost" data-act="reSetup" data-arg="${p.id}">Change address or number of rooms…</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
   <h3>Room photos</h3>${unitsOf(p.id).map(u => `<div><b>${esc(u.name)}</b>${photoStrip(u)}</div>`).join('')}
   <h3>Other</h3><label class="row"><input type="checkbox" data-bind="${b}.camera" ${p.camera ? 'checked' : ''}> There is a security camera outside this property</label>
   <p style="margin-top:1rem"><button class="btn del" data-act="delProp" data-arg="${p.id}" data-confirm="1">Delete this property</button></p></div>`;
@@ -435,7 +436,7 @@ function propCard(p) {
 A.openProp = id => { S.ui.open = S.ui.open === id ? '' : id; };
 A.addPf = () => { const id = uid(); S.portfolios.push({ id, name: 'New client', kind: 'managed', feePct: 8, owner: '' }); S.ui.pf = id; toast('New group made. Give it a name.'); };
 A.delPf = id => { propsOf(id).forEach(p => A.delProp(p.id)); S.portfolios = S.portfolios.filter(p => p.id !== id); S.ui.pf = S.portfolios[0].id; };
-A.addProp = () => { const id = uid(); S.properties.push({ id, pf: curPf().id, name: 'New property', address: '', value: 0, invested: 0, mortgage: { balance: 0, rate: 5, years: 25, payment: 0 }, expenses: [], floors: [], camera: false, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {} }); S.units.push({ id: uid(), prop: id, name: 'Unit 1', floor: '', rent: 0, market: 0, tenant: '', desc: '' }); S.ui.open = id; };
+A.addProp = () => { const id = uid(); S.properties.push({ id, pf: curPf().id, name: 'New property', address: '', value: 0, invested: 0, mortgage: { balance: 0, rate: 5, years: 25, payment: 0 }, expenses: [], floors: [], camera: false, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {}, setup: true }); S.ui.open = id; };
 A.delProp = id => { S.units = S.units.filter(u => u.prop !== id); S.properties = S.properties.filter(p => p.id !== id); S.renos = S.renos.filter(r => r.prop !== id); };
 A.addExp = pid => { byId(S.properties, pid).expenses.push({ id: uid(), name: 'New bill', amount: 0, per: 'm' }); };
 A.delExp = arg => { const [pid, eid] = arg.split('|'), p = byId(S.properties, pid); p.expenses = p.expenses.filter(e => e.id !== eid); };
@@ -589,6 +590,56 @@ V.reno = pf => {
 };
 A.addPast = () => { const pr = propsOf(curPf().id); if (!pr.length) { toast('Add a property first'); return false; } S.pastRenos.unshift({ id: uid(), prop: pr[pr.length - 1].id, name: 'Renovation', date: today(), cost: 0, rentUp: 0, note: '' }); };
 A.delPast = id => { S.pastRenos = S.pastRenos.filter(r => r.id !== id); };
+
+/* ---------- quick set-up: the address, and whether it is rented whole or room by room ---------- */
+const FLOORN = ['Main floor', 'Upper floor', 'Third floor', 'Basement'];
+const FLOORTASKS = 'Kitchen: counters, stove top, sink, microwave\nWashroom: toilet, sink, shower/tub, mirror\nCorridor and stairs: vacuum and tidy\nMop kitchen and washroom floors\nEmpty shared bins into the outdoor bins\nWipe door handles and light switches';
+const addrInput = (path, val) => `<input class="in" data-bind="${path}" data-addr="1" list="addrs" value="${esc(val)}" placeholder="Start typing, e.g. 25 Main St" autocomplete="off">`;
+let addrTimer;
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.addr || el.value.trim().length < 4) return;
+  clearTimeout(addrTimer);
+  addrTimer = setTimeout(async () => { try {
+    const j = await (await fetch('https://map.toronto.ca/cotgeocoder/rest/geocoder/suggest?f=json&addressOnly=0&retRowLimit=6&searchString=' + encodeURIComponent(el.value.trim()))).json();
+    let dl = $('#addrs'); if (!dl) { dl = document.createElement('datalist'); dl.id = 'addrs'; document.body.appendChild(dl); }
+    dl.innerHTML = ((j.result || {}).rows || []).map(r => `<option value="${esc(r.ADDRESS + ', Toronto, ON')}">`).join('');
+  } catch (x) { } }, 350);
+});
+function setupCard(p) {
+  const us = unitsOf(p.id), b = `properties:${p.id}`;
+  const w = (p.wz ??= { mode: us.length > 1 ? 'rooms' : 'whole', rooms: Math.max(us.length, 2), floors: Math.max(p.floors.length, 1), rent: us[0] ? us[0].rent : 0 });
+  const n = Math.max(1, Math.round(w.rooms || 1)), fl = Math.min(4, Math.max(1, Math.round(w.floors || 1)));
+  return `<div class="card" style="border:2px solid var(--brand)"><h2>${us.length ? 'Change this property' : 'Set up the new property'}</h2>
+  <div class="form">${field('Address', addrInput(b + '.address', p.address))}${field('A short name for it', txt(b + '.name', p.name))}${field('How is it rented?', sel(b + '.wz.mode', w.mode, [['whole', 'The whole place, to one household'], ['rooms', 'Room by room']]))}</div>
+  <div class="form">${w.mode === 'rooms' ? field('How many rooms are rented?', num(b + '.wz.rooms', w.rooms)) + field('On how many floors?', num(b + '.wz.floors', w.floors)) + field('Usual rent for one room ($ a month)', num(b + '.wz.rent', w.rent)) : field('Rent for the whole place ($ a month)', num(b + '.wz.rent', w.rent))}</div>
+  <div class="note">${w.mode === 'rooms' ? `This makes <b>${n} room${n > 1 ? 's' : ''}</b> on <b>${fl} floor${fl > 1 ? 's' : ''}</b>${fl > 1 ? ` (about ${Math.ceil(n / fl)} per floor)` : ''}, each with its own rent, tenant, contract and place in the cleaning rota. You can rename rooms and change each rent afterwards.${n > 6 && /north york|scarborough|etobicoke/i.test(p.address) ? ' <b>Note: North York, Scarborough and Etobicoke allow at most 6 rented rooms in a house.</b>' : n >= 4 && /toronto/i.test(p.address) ? ' With 4 or more rooms, Toronto requires a multi-tenant house licence.' : ''}` : 'This makes <b>one unit</b> with one rent and one contract. No cleaning rota is needed.'}${us.length ? ' Rooms that have a tenant are never removed.' : ''}</div>
+  <div class="row"><button class="btn" data-act="applySetup" data-arg="${p.id}">Save and continue</button>${us.length ? `<button class="btn sec" data-act="cancelSetup" data-arg="${p.id}">Cancel</button>` : `<button class="btn del" data-act="delProp" data-arg="${p.id}">Cancel</button>`}</div>
+  <p class="small">Toronto addresses are suggested as you type; the letters you type are sent to the City of Toronto’s address finder. Outside Toronto, just type the full address.</p></div>`;
+}
+A.reSetup = pid => { byId(S.properties, pid).setup = true; };
+A.cancelSetup = pid => { const p = byId(S.properties, pid); p.setup = false; delete p.wz; };
+A.applySetup = pid => {
+  const p = byId(S.properties, pid), w = p.wz || { mode: 'whole', rent: 0 }, rent = w.rent || 0;
+  let us = unitsOf(pid);
+  const dropEmpty = keep => { for (let i = us.length - 1; i >= 0 && us.length > keep; i--) if (!us[i].tenant) { A.delUnit(us[i].id); us = unitsOf(pid); } };
+  if (w.mode === 'whole') {
+    dropEmpty(1);
+    if (!us.length) S.units.push({ id: uid(), prop: pid, name: 'Whole place', floor: '', rent, market: rent, tenant: '', desc: '' });
+    else if (us.length === 1) { us[0].name = /^room \d+$/i.test(us[0].name) ? 'Whole place' : us[0].name; us[0].floor = ''; if (rent) us[0].rent = rent; }
+    if (unitsOf(pid).length === 1) p.floors = [];
+  } else {
+    const n = Math.max(1, Math.round(w.rooms || 1)), fl = Math.min(4, Math.max(1, Math.round(w.floors || 1)));
+    while (p.floors.length < fl) p.floors.push({ id: uid(), name: FLOORN[p.floors.length], tasks: FLOORTASKS });
+    if (p.floors.length > fl) { const gone = p.floors.slice(fl).map(f => f.id); p.floors = p.floors.slice(0, fl); us.forEach(u => { if (gone.includes(u.floor)) u.floor = ''; }); }
+    dropEmpty(n);
+    if (us.length === 1 && /whole/i.test(us[0].name)) us[0].name = 'Room 1';
+    for (let k = us.length; k < n; k++) S.units.push({ id: uid(), prop: pid, name: 'Room ' + (k + 1), floor: '', rent, market: rent, tenant: '', desc: 'Private room, shared kitchen and washroom' });
+    const per = Math.ceil(n / fl); unitsOf(pid).forEach((u, i) => { if (!u.floor) u.floor = p.floors[Math.min(fl - 1, Math.floor(i / per))].id; });
+  }
+  if (p.name === 'New property' && p.address) p.name = p.address.split(',')[0];
+  p.setup = false; delete p.wz; S.ui.open = pid;
+  toast('Saved. Now fill in the mortgage and bills below.');
+};
 /* Doorstep — Find tenants, Contracts, Chores, People, Weekly check-up, Settings, tenant page */
 
 /* ---------------- Find tenants ---------------- */

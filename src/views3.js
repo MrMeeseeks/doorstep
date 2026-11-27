@@ -84,3 +84,53 @@ V.reno = pf => {
 };
 A.addPast = () => { const pr = propsOf(curPf().id); if (!pr.length) { toast('Add a property first'); return false; } S.pastRenos.unshift({ id: uid(), prop: pr[pr.length - 1].id, name: 'Renovation', date: today(), cost: 0, rentUp: 0, note: '' }); };
 A.delPast = id => { S.pastRenos = S.pastRenos.filter(r => r.id !== id); };
+
+/* ---------- quick set-up: the address, and whether it is rented whole or room by room ---------- */
+const FLOORN = ['Main floor', 'Upper floor', 'Third floor', 'Basement'];
+const FLOORTASKS = 'Kitchen: counters, stove top, sink, microwave\nWashroom: toilet, sink, shower/tub, mirror\nCorridor and stairs: vacuum and tidy\nMop kitchen and washroom floors\nEmpty shared bins into the outdoor bins\nWipe door handles and light switches';
+const addrInput = (path, val) => `<input class="in" data-bind="${path}" data-addr="1" list="addrs" value="${esc(val)}" placeholder="Start typing, e.g. 25 Main St" autocomplete="off">`;
+let addrTimer;
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.addr || el.value.trim().length < 4) return;
+  clearTimeout(addrTimer);
+  addrTimer = setTimeout(async () => { try {
+    const j = await (await fetch('https://map.toronto.ca/cotgeocoder/rest/geocoder/suggest?f=json&addressOnly=0&retRowLimit=6&searchString=' + encodeURIComponent(el.value.trim()))).json();
+    let dl = $('#addrs'); if (!dl) { dl = document.createElement('datalist'); dl.id = 'addrs'; document.body.appendChild(dl); }
+    dl.innerHTML = ((j.result || {}).rows || []).map(r => `<option value="${esc(r.ADDRESS + ', Toronto, ON')}">`).join('');
+  } catch (x) { } }, 350);
+});
+function setupCard(p) {
+  const us = unitsOf(p.id), b = `properties:${p.id}`;
+  const w = (p.wz ??= { mode: us.length > 1 ? 'rooms' : 'whole', rooms: Math.max(us.length, 2), floors: Math.max(p.floors.length, 1), rent: us[0] ? us[0].rent : 0 });
+  const n = Math.max(1, Math.round(w.rooms || 1)), fl = Math.min(4, Math.max(1, Math.round(w.floors || 1)));
+  return `<div class="card" style="border:2px solid var(--brand)"><h2>${us.length ? 'Change this property' : 'Set up the new property'}</h2>
+  <div class="form">${field('Address', addrInput(b + '.address', p.address))}${field('A short name for it', txt(b + '.name', p.name))}${field('How is it rented?', sel(b + '.wz.mode', w.mode, [['whole', 'The whole place, to one household'], ['rooms', 'Room by room']]))}</div>
+  <div class="form">${w.mode === 'rooms' ? field('How many rooms are rented?', num(b + '.wz.rooms', w.rooms)) + field('On how many floors?', num(b + '.wz.floors', w.floors)) + field('Usual rent for one room ($ a month)', num(b + '.wz.rent', w.rent)) : field('Rent for the whole place ($ a month)', num(b + '.wz.rent', w.rent))}</div>
+  <div class="note">${w.mode === 'rooms' ? `This makes <b>${n} room${n > 1 ? 's' : ''}</b> on <b>${fl} floor${fl > 1 ? 's' : ''}</b>${fl > 1 ? ` (about ${Math.ceil(n / fl)} per floor)` : ''}, each with its own rent, tenant, contract and place in the cleaning rota. You can rename rooms and change each rent afterwards.${n > 6 && /north york|scarborough|etobicoke/i.test(p.address) ? ' <b>Note: North York, Scarborough and Etobicoke allow at most 6 rented rooms in a house.</b>' : n >= 4 && /toronto/i.test(p.address) ? ' With 4 or more rooms, Toronto requires a multi-tenant house licence.' : ''}` : 'This makes <b>one unit</b> with one rent and one contract. No cleaning rota is needed.'}${us.length ? ' Rooms that have a tenant are never removed.' : ''}</div>
+  <div class="row"><button class="btn" data-act="applySetup" data-arg="${p.id}">Save and continue</button>${us.length ? `<button class="btn sec" data-act="cancelSetup" data-arg="${p.id}">Cancel</button>` : `<button class="btn del" data-act="delProp" data-arg="${p.id}">Cancel</button>`}</div>
+  <p class="small">Toronto addresses are suggested as you type; the letters you type are sent to the City of Toronto’s address finder. Outside Toronto, just type the full address.</p></div>`;
+}
+A.reSetup = pid => { byId(S.properties, pid).setup = true; };
+A.cancelSetup = pid => { const p = byId(S.properties, pid); p.setup = false; delete p.wz; };
+A.applySetup = pid => {
+  const p = byId(S.properties, pid), w = p.wz || { mode: 'whole', rent: 0 }, rent = w.rent || 0;
+  let us = unitsOf(pid);
+  const dropEmpty = keep => { for (let i = us.length - 1; i >= 0 && us.length > keep; i--) if (!us[i].tenant) { A.delUnit(us[i].id); us = unitsOf(pid); } };
+  if (w.mode === 'whole') {
+    dropEmpty(1);
+    if (!us.length) S.units.push({ id: uid(), prop: pid, name: 'Whole place', floor: '', rent, market: rent, tenant: '', desc: '' });
+    else if (us.length === 1) { us[0].name = /^room \d+$/i.test(us[0].name) ? 'Whole place' : us[0].name; us[0].floor = ''; if (rent) us[0].rent = rent; }
+    if (unitsOf(pid).length === 1) p.floors = [];
+  } else {
+    const n = Math.max(1, Math.round(w.rooms || 1)), fl = Math.min(4, Math.max(1, Math.round(w.floors || 1)));
+    while (p.floors.length < fl) p.floors.push({ id: uid(), name: FLOORN[p.floors.length], tasks: FLOORTASKS });
+    if (p.floors.length > fl) { const gone = p.floors.slice(fl).map(f => f.id); p.floors = p.floors.slice(0, fl); us.forEach(u => { if (gone.includes(u.floor)) u.floor = ''; }); }
+    dropEmpty(n);
+    if (us.length === 1 && /whole/i.test(us[0].name)) us[0].name = 'Room 1';
+    for (let k = us.length; k < n; k++) S.units.push({ id: uid(), prop: pid, name: 'Room ' + (k + 1), floor: '', rent, market: rent, tenant: '', desc: 'Private room, shared kitchen and washroom' });
+    const per = Math.ceil(n / fl); unitsOf(pid).forEach((u, i) => { if (!u.floor) u.floor = p.floors[Math.min(fl - 1, Math.floor(i / per))].id; });
+  }
+  if (p.name === 'New property' && p.address) p.name = p.address.split(',')[0];
+  p.setup = false; delete p.wz; S.ui.open = pid;
+  toast('Saved. Now fill in the mortgage and bills below.');
+};

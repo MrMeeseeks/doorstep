@@ -78,9 +78,10 @@ function propCard(p) {
   const f = propFin(p), open = S.ui.open === p.id, b = `properties:${p.id}`;
   const free = S.tenants.filter(t => !tenantUnit(t.id));
   const head = `<div class="row sp"><div><h2 style="margin:0">${esc(p.name)}</h2><span class="small">${esc(p.address)} · ${f.rooms} unit${f.rooms === 1 ? '' : 's'} · ${money(f.rent)} rent · <b class="${f.cash >= 0 ? 'pos' : 'neg'}">${money(f.cash)} left over</b> a month</span></div><button class="btn sec" data-act="openProp" data-arg="${p.id}" aria-expanded="${open}">${open ? 'Close' : 'Open and edit'}</button></div>`;
+  if (p.setup) return setupCard(p);
   if (!open) return `<div class="card">${head}</div>`;
   return `<div class="card">${head}
-  <h3>The basics</h3><div class="form">${field('Name', txt(b + '.name', p.name))}${field('Address', txt(b + '.address', p.address))}${field('What it is worth today ($)', num(b + '.value', p.value))}${field('Cash we put in ($) — down payment + renovations', num(b + '.invested', p.invested))}</div>
+  <h3>The basics</h3><div class="form">${field('Name', txt(b + '.name', p.name))}${field('Address', addrInput(b + '.address', p.address))}${field('What it is worth today ($)', num(b + '.value', p.value))}${field('Cash we put in ($) — down payment + renovations', num(b + '.invested', p.invested))}</div>
   <h3>Mortgage</h3><div class="form">${field('Amount still owed ($)', num(b + '.mortgage.balance', p.mortgage.balance))}${field('Interest rate (%)', num(b + '.mortgage.rate', p.mortgage.rate))}${field('Years left to pay', num(b + '.mortgage.years', p.mortgage.years))}${field('Monthly payment ($) — leave 0 to calculate', num(b + '.mortgage.payment', p.mortgage.payment))}</div>
   <div class="note">Payment <b>${money(f.pay)}</b> a month. Of that, <b>${money(f.interest)}</b> is interest (gone) and <b>${money(f.principal)}</b> pays down the loan (you keep it as equity).</div>
   <h3>Bills and expenses</h3><div class="tw"><table><tr><th>What</th><th class="n">Amount ($)</th><th>How often</th><th></th></tr>
@@ -88,7 +89,7 @@ function propCard(p) {
   <tr><td colspan="4"><button class="btn ghost" data-act="addExp" data-arg="${p.id}">＋ Add a bill</button> <span class="small">Total: ${money(f.opex)} a month</span></td></tr></table></div>
   <h3>Rooms / units</h3><div class="tw"><table><tr><th>Name</th>${p.floors.length ? '<th>Floor</th>' : ''}<th class="n">Rent now ($)</th><th class="n">Market rent ($)</th><th>Who lives there</th><th></th></tr>
   ${unitsOf(p.id).map(u => `<tr><td>${txt(`units:${u.id}.name`, u.name)}</td>${p.floors.length ? `<td>${sel(`units:${u.id}.floor`, u.floor, [['', '—'], ...p.floors.map(x => [x.id, x.name])])}</td>` : ''}<td class="n">${num(`units:${u.id}.rent`, u.rent, 100)}</td><td class="n">${num(`units:${u.id}.market`, u.market, 100)}</td><td>${sel(`units:${u.id}.tenant`, u.tenant, [['', '— empty —'], ...S.tenants.filter(t => t.id === u.tenant || free.includes(t)).map(t => [t.id, t.name])])}</td><td><button class="btn del" data-act="delUnit" data-arg="${u.id}" data-confirm="1">Remove</button></td></tr>`).join('')}
-  <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
+  <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <button class="btn ghost" data-act="reSetup" data-arg="${p.id}">Change address or number of rooms…</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
   <h3>Room photos</h3>${unitsOf(p.id).map(u => `<div><b>${esc(u.name)}</b>${photoStrip(u)}</div>`).join('')}
   <h3>Other</h3><label class="row"><input type="checkbox" data-bind="${b}.camera" ${p.camera ? 'checked' : ''}> There is a security camera outside this property</label>
   <p style="margin-top:1rem"><button class="btn del" data-act="delProp" data-arg="${p.id}" data-confirm="1">Delete this property</button></p></div>`;
@@ -96,7 +97,7 @@ function propCard(p) {
 A.openProp = id => { S.ui.open = S.ui.open === id ? '' : id; };
 A.addPf = () => { const id = uid(); S.portfolios.push({ id, name: 'New client', kind: 'managed', feePct: 8, owner: '' }); S.ui.pf = id; toast('New group made. Give it a name.'); };
 A.delPf = id => { propsOf(id).forEach(p => A.delProp(p.id)); S.portfolios = S.portfolios.filter(p => p.id !== id); S.ui.pf = S.portfolios[0].id; };
-A.addProp = () => { const id = uid(); S.properties.push({ id, pf: curPf().id, name: 'New property', address: '', value: 0, invested: 0, mortgage: { balance: 0, rate: 5, years: 25, payment: 0 }, expenses: [], floors: [], camera: false, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {} }); S.units.push({ id: uid(), prop: id, name: 'Unit 1', floor: '', rent: 0, market: 0, tenant: '', desc: '' }); S.ui.open = id; };
+A.addProp = () => { const id = uid(); S.properties.push({ id, pf: curPf().id, name: 'New property', address: '', value: 0, invested: 0, mortgage: { balance: 0, rate: 5, years: 25, payment: 0 }, expenses: [], floors: [], camera: false, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {}, setup: true }); S.ui.open = id; };
 A.delProp = id => { S.units = S.units.filter(u => u.prop !== id); S.properties = S.properties.filter(p => p.id !== id); S.renos = S.renos.filter(r => r.prop !== id); };
 A.addExp = pid => { byId(S.properties, pid).expenses.push({ id: uid(), name: 'New bill', amount: 0, per: 'm' }); };
 A.delExp = arg => { const [pid, eid] = arg.split('|'), p = byId(S.properties, pid); p.expenses = p.expenses.filter(e => e.id !== eid); };
