@@ -148,12 +148,27 @@ function garbageFor(p, w) {
   return pick;
 }
 const wasteType = (p, w) => (mod(w, 2) === 0) !== !!p.wasteFlip ? 'Garbage' : 'Recycling';
+const addDays = (s, n) => { const d = pDate(s); d.setDate(d.getDate() + n); return iso(d); };
+const dn = s => pDate(s).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
+const cityCal = p => (typeof CITY !== 'undefined' && p.cityCal && CITY.cal[p.cityCal]) || null;
+const wasteDayOf = p => cityCal(p) ? DAYS.indexOf(p.cityCal.replace(/\d+$/, '')) : (p.wasteDay ?? 2);
+// What the truck takes in the week starting monIso. Uses the City of Toronto's published dates when a calendar is chosen.
+function pickupFor(p, monIso, w) {
+  const cal = cityCal(p), day = wasteDayOf(p), guess = addDays(monIso, mod(day - 1, 7));
+  if (!cal) return { date: guess, waste: wasteType(p, w), extra: '', official: false };
+  for (let i = 0; i < 7; i++) { const d = addDays(monIso, i), f = cal[d];
+    if (f !== undefined) return { date: d, waste: f.includes('G') ? 'Garbage' : 'Recycling', extra: (f.includes('Y') ? ' + yard waste' : '') + (f.includes('X') ? ' + Christmas trees' : ''), official: true }; }
+  // Past the last date the City has published: keep alternating from the last known week.
+  const last = Object.keys(cal).sort().pop(), weeks = Math.round((pDate(monIso) - mondayOf(pDate(last))) / 6048e5);
+  const g = (mod(weeks, 2) === 0) === cal[last].includes('G');
+  return { date: guess, waste: g !== !!p.wasteFlip ? 'Garbage' : 'Recycling', extra: '', official: false };
+}
 function schedule(p, weeks = 8, from = new Date()) {
   const w0 = weekIdx(p, from), m0 = mondayOf(from), rows = [];
   for (let k = 0; k < weeks; k++) {
     const mon = new Date(m0); mon.setDate(mon.getDate() + k * 7);
-    const pick = new Date(mon); pick.setDate(pick.getDate() + mod((p.wasteDay ?? 2) - 1, 7));
-    rows.push({ mon: iso(mon), pickup: iso(pick), w: w0 + k, waste: wasteType(p, w0 + k), garbage: garbageFor(p, w0 + k),
+    const pk = pickupFor(p, iso(mon), w0 + k);
+    rows.push({ mon: iso(mon), pickup: pk.date, w: w0 + k, waste: pk.waste, bins: pk.waste + ' + green bin' + pk.extra, official: pk.official, garbage: garbageFor(p, w0 + k),
       clean: p.floors.map(f => ({ f, t: cleanerFor(p, f.id, w0 + k) })) });
   }
   return rows;
@@ -189,6 +204,7 @@ function findings(pf) {
     if (unitsOf(p.id).length >= 4 && /toronto|north york|scarborough|etobicoke/i.test(p.address) && !(p.compliance || {}).licence)
       add('high', `${p.name} has 4 or more rented rooms. Toronto requires a multi-tenant house licence — tick it off once you have it.`, 'contracts');
   });
+  propsOf(pf.id).forEach(p => { if (p.floors.length && /toronto|north york|scarborough|etobicoke/i.test(p.address) && !cityCal(p)) add('low', `Choose the City pickup calendar for ${p.name} so garbage weeks and holiday changes are always right.`, 'chores'); });
   pfTenants(pf.id).forEach(t => {
     const u = tenantUnit(t.id), p = byId(S.properties, u.prop);
     if (dom > 3 && !paid[t.id]) add('high', `${t.name} (${u.name}) has not been marked as paid for this month.`, 'money');
@@ -221,8 +237,8 @@ function tenantPayload(t) {
   const u = tenantUnit(t.id), p = byId(S.properties, u.prop), fl = byId(p.floors, u.floor);
   const first = x => x ? x.name : '—';
   return { n: t.name, u: u.name, p: p.name, a: p.address, ll: S.settings.landlord, le: S.settings.email, lp: S.settings.phone, rent: u.rent,
-    made: today(), fl: fl ? fl.name : '', tasks: fl ? fl.tasks : '', day: DAYS[p.wasteDay ?? 2],
-    sch: fl ? schedule(p, 12).map(r => ({ m: r.mon, pk: r.pickup, w: r.waste, g: first(r.garbage), c: first((r.clean.find(c => c.f.id === fl.id) || {}).t) })) : [],
+    made: today(), fl: fl ? fl.name : '', tasks: fl ? fl.tasks : '', day: DAYS[wasteDayOf(p)],
+    sch: fl ? schedule(p, 12).map(r => ({ m: r.mon, pk: r.pickup, w: r.bins, g: first(r.garbage), c: first((r.clean.find(c => c.f.id === fl.id) || {}).t) })) : [],
     docs: S.docs.filter(d => d.tenant === t.id && d.status !== 'draft').map(d => ({ t: d.title, b: d.body, s: d.status })) };
 }
 const isHosted = () => /^https?:/.test(location.protocol);

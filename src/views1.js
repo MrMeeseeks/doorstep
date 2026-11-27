@@ -1,9 +1,10 @@
 /* Doorstep — shell, Home, Properties, Money, Renovations */
-const NAV = [['home', '🏠', 'Home'], ['properties', '🏘️', 'Properties'], ['money', '💵', 'Money'], ['reno', '🔨', 'Renovations'], ['market', '📣', 'Find tenants'], ['contracts', '📄', 'Contracts & rules'], ['chores', '🧹', 'Cleaning & garbage'], ['people', '👥', 'Tenants & links'], ['qc', '✅', 'Weekly check-up'], ['settings', '⚙️', 'Settings']];
+const NAV = [['home', '🏠', 'Home'], ['properties', '🏘️', 'Properties'], ['money', '💵', 'Money'], ['reno', '🔨', 'Renovations'], ['records', '📁', 'Records & documents'], ['market', '📣', 'Find tenants'], ['contracts', '📄', 'Contracts & rules'], ['chores', '🧹', 'Cleaning & garbage'], ['people', '👥', 'Tenants & links'], ['qc', '✅', 'Weekly check-up'], ['settings', '⚙️', 'Settings']];
 const V = {}, A = {};
 let unlocked = false;
 
 function render() {
+  S.files ??= []; S.ledger ??= []; S.pastRenos ??= [];
   if (S.settings.pin && !unlocked) {
     $('#app').innerHTML = `<main><div class="card lock"><h1>🏠 Doorstep</h1><p>Enter your PIN</p><input class="in" id="pin" type="password" inputmode="numeric" autofocus style="text-align:center;font-size:1.4rem;width:10rem"><p><button class="btn" data-act="unlock">Open</button></p></div></main>`;
     return;
