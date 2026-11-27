@@ -1,0 +1,713 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Doorstep — rental manager</title><style>
+:root{--bg:#f6f3ee;--card:#fff;--ink:#1d2a26;--mute:#5d6b66;--line:#e2ddd3;--brand:#1f6f5c;--brand2:#e7f2ee;--warn:#b45309;--warnbg:#fdf3e1;--bad:#b3261e;--badbg:#fbe9e7;--good:#1a7f4b;--goodbg:#e6f4ea;--r:14px}
+*{box-sizing:border-box}
+html{font-size:17px}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+h1{font-size:1.6rem;margin:0 0 .2rem}h2{font-size:1.2rem;margin:0 0 .6rem}h3{font-size:1rem;margin:1rem 0 .4rem}
+p{margin:.3rem 0 .7rem}a{color:var(--brand)}
+.sub{color:var(--mute);margin-bottom:1rem}
+.small{font-size:.85rem;color:var(--mute)}
+#app{display:flex;min-height:100vh}
+nav{width:240px;background:#17352e;color:#fff;padding:1rem .7rem;position:sticky;top:0;height:100vh;overflow:auto;flex-shrink:0}
+nav .logo{font-size:1.3rem;font-weight:700;padding:.2rem .6rem 1rem}
+nav button{display:flex;gap:.6rem;align-items:center;width:100%;background:none;border:0;color:#dbe8e3;font:inherit;text-align:left;padding:.65rem .7rem;border-radius:10px;cursor:pointer;margin-bottom:2px}
+nav button:hover{background:#ffffff1a}
+nav button.on{background:#fff;color:#17352e;font-weight:600}
+nav .badge{margin-left:auto;background:#f2b84b;color:#3b2a00;border-radius:99px;font-size:.75rem;padding:0 .5rem;font-weight:700}
+main{flex:1;padding:1.4rem 1.8rem 4rem;max-width:1100px;min-width:0}
+.top{display:flex;gap:.8rem;align-items:center;justify-content:flex-end;margin-bottom:.6rem;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.1rem 1.2rem;margin-bottom:1rem}
+.grid{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:1rem}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem}
+.stat .l{color:var(--mute);font-size:.9rem}.stat .v{font-size:1.7rem;font-weight:700;margin:.1rem 0}.stat .h{font-size:.82rem;color:var(--mute)}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.btn{font:inherit;border:1px solid var(--brand);background:var(--brand);color:#fff;border-radius:10px;padding:.55rem .95rem;cursor:pointer;font-weight:600;text-decoration:none;display:inline-block}
+.btn:hover{filter:brightness(1.08)}
+.btn.sec{background:#fff;color:var(--brand)}
+.btn.ghost{background:none;border-color:transparent;color:var(--brand);padding:.4rem .5rem}
+.btn.del{background:none;border-color:transparent;color:var(--bad);padding:.3rem .5rem;font-weight:400}
+.btn.sm{padding:.3rem .65rem;font-size:.88rem}
+.btn:focus-visible,.in:focus-visible,nav button:focus-visible{outline:3px solid #f2b84b;outline-offset:2px}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.sp{justify-content:space-between}
+.in,select,textarea{font:inherit;border:1px solid #c9c2b5;border-radius:8px;padding:.42rem .55rem;background:#fff;color:var(--ink);max-width:100%}
+input[type=number].in{width:120px;text-align:right}
+textarea{width:100%;min-height:9rem;line-height:1.4}
+label.f{display:flex;flex-direction:column;gap:.2rem;font-size:.9rem;color:var(--mute);min-width:150px}
+label.f .in,label.f select{color:var(--ink)}
+.form{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:.6rem 0 1rem}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.82rem;color:var(--mute);font-weight:600;padding:.4rem .5rem;border-bottom:1px solid var(--line)}
+td{padding:.45rem .5rem;border-bottom:1px solid #efebe3;vertical-align:middle}
+td.n,th.n{text-align:right}
+.tw{overflow-x:auto}
+.chip{display:inline-block;border-radius:99px;padding:.1rem .6rem;font-size:.8rem;font-weight:600;background:#eee;color:#444;white-space:nowrap}
+.chip.g{background:var(--goodbg);color:var(--good)}.chip.w{background:var(--warnbg);color:var(--warn)}.chip.b{background:var(--badbg);color:var(--bad)}.chip.i{background:var(--brand2);color:var(--brand)}
+.note{background:var(--brand2);border-radius:10px;padding:.7rem .9rem;margin:.6rem 0;font-size:.92rem}
+.note.w{background:var(--warnbg)}.note.b{background:var(--badbg)}
+.todo{display:flex;gap:.7rem;align-items:center;padding:.6rem 0;border-bottom:1px solid #efebe3}
+.todo:last-child{border:0}.todo .t{flex:1}
+.dot{width:.7rem;height:.7rem;border-radius:50%;flex-shrink:0}.dot.high{background:var(--bad)}.dot.med{background:#e0a100}.dot.low{background:#8aa39b}
+.bar{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:.5rem 0}
+.bar div{min-width:2px}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.86rem}
+.legend i{display:inline-block;width:.8rem;height:.8rem;border-radius:3px;margin-right:.3rem;vertical-align:-1px}
+.big{font-size:2.6rem;font-weight:800}
+.week{display:grid;grid-template-columns:8.5rem 1fr 1fr;gap:.5rem;padding:.5rem .3rem;border-bottom:1px solid #efebe3;align-items:center}
+.week.now{background:var(--brand2);border-radius:8px}
+.me{background:#fff3c4;border-radius:6px;padding:0 .3rem;font-weight:700}
+.doc{white-space:pre-wrap;font-family:Georgia,serif;background:#fffdf8;border:1px solid var(--line);border-radius:8px;padding:1rem;max-height:22rem;overflow:auto;font-size:.92rem}
+.lock{max-width:340px;margin:18vh auto;text-align:center}
+ul.tight{margin:.3rem 0;padding-left:1.2rem}ul.tight li{margin:.15rem 0}
+.banner{background:#fff3c4;border:1px solid #ecd67a;border-radius:10px;padding:.6rem .9rem;margin-bottom:1rem;display:flex;gap:.8rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#17352e;color:#fff;padding:.6rem 1rem;border-radius:10px;z-index:9;box-shadow:0 4px 16px #0004}
+@media(max-width:820px){
+ #app{flex-direction:column}
+ nav{width:100%;height:auto;position:sticky;top:0;z-index:5;display:flex;overflow-x:auto;padding:.4rem;gap:.2rem}
+ nav .logo{display:none}nav button{width:auto;white-space:nowrap;margin:0;padding:.5rem .7rem}
+ main{padding:1rem .8rem 4rem}
+ .week{grid-template-columns:1fr}
+}
+@media print{nav,.top,.btn,.banner,.noprint{display:none!important}body{background:#fff}main{padding:0;max-width:none}.card,.stat{break-inside:avoid}}
+</style></head><body><div id="app"></div><script>
+/* Doorstep — core: data, storage, money math, chores, checks */
+const KEY = 'doorstep.v1';
+const GUIDELINE = { 2026: 2.1, 2027: 1.9 }; // Ontario rent increase guideline, % (ontario.ca)
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const money = (n, d = 0) => (n < 0 ? '−' : '') + '$' + Math.abs(n || 0).toLocaleString('en-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = n => isFinite(n) ? (n * 100).toFixed(1) + '%' : '—';
+const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const today = () => iso(new Date());
+const pDate = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const nice = s => s ? pDate(s).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const daysBetween = (a, b) => Math.round((pDate(b) - pDate(a)) / 864e5);
+const monthKey = (d = new Date()) => iso(d).slice(0, 7);
+
+let S;
+
+function seed() {
+  const P = 'pf1', A = 'prA', H = 'prH', f1 = 'flr1', f2 = 'flr2';
+  const T = [1, 2, 3, 4, 5, 6, 7].map(i => ({ id: 'tn' + i, name: 'Tenant ' + i, email: '', phone: '', leaseStart: '2026-0' + (i + 1) + '-01', deposit: 0, lastIncrease: '' }));
+  const rents = [950, 1000, 1100, 900, 1050, 1150];
+  return {
+    v: 1, sample: true,
+    settings: { landlord: '', email: '', phone: '', pin: '', lastBackup: '' },
+    ui: { view: 'home', pf: P, open: H, month: monthKey(), tenant: '' },
+    portfolios: [{ id: P, name: 'Our family properties', kind: 'owned', feePct: 8, owner: '' }],
+    properties: [
+      { id: A, pf: P, name: 'Richmond Hill apartment', address: 'Richmond Hill, ON', value: 650000, invested: 150000,
+        mortgage: { balance: 300000, rate: 4.9, years: 25, payment: 0 },
+        expenses: [{ id: uid(), name: 'Property tax', amount: 280, per: 'm' }, { id: uid(), name: 'Condo / maintenance fee', amount: 550, per: 'm' }, { id: uid(), name: 'Insurance', amount: 420, per: 'y' }],
+        floors: [], camera: false, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {} },
+      { id: H, pf: P, name: 'North York house', address: 'North York, Toronto, ON', value: 1400000, invested: 350000,
+        mortgage: { balance: 550000, rate: 5.1, years: 25, payment: 0 },
+        expenses: [{ id: uid(), name: 'Property tax', amount: 600, per: 'm' }, { id: uid(), name: 'Insurance', amount: 2200, per: 'y' }, { id: uid(), name: 'Hydro, gas, water', amount: 450, per: 'm' }, { id: uid(), name: 'Internet', amount: 90, per: 'm' }, { id: uid(), name: 'Repairs set-aside', amount: 250, per: 'm' }],
+        floors: [
+          { id: f1, name: 'Main floor', tasks: 'Kitchen: counters, stove top, sink, microwave, table\nKitchen: wipe fridge shelves, throw out old food\nWashroom: toilet, sink, shower/tub, mirror\nFront entrance and corridor: sweep, tidy shoes, shake mats\nVacuum all shared floors\nMop kitchen and washroom floors\nEmpty kitchen and washroom bins into the outdoor bins\nWipe door handles and light switches' },
+          { id: f2, name: 'Upper floor', tasks: 'Washroom: toilet, sink, shower/tub, mirror\nKitchen or kitchenette (if on this floor): counters, sink, stove top\nStairs and landing: vacuum, wipe the handrail\nCorridor: vacuum and tidy\nMop washroom floor\nLaundry area: wipe machines, empty lint trap\nEmpty shared bins into the outdoor bins\nWipe door handles and light switches' }],
+        camera: true, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {} }
+    ],
+    units: [{ id: 'unA', prop: A, name: 'Whole apartment', floor: '', rent: 2600, market: 2700, tenant: 'tn7', desc: '2 bedroom apartment, bright, parking included' }]
+      .concat(rents.map((r, i) => ({ id: 'un' + (i + 1), prop: H, name: 'Room ' + (i + 1), floor: i < 3 ? f1 : f2, rent: r, market: r + (i % 2 ? 50 : 0), tenant: i === 4 ? '' : 'tn' + (i + 1), desc: 'Furnished private room, shared kitchen and washroom, Wi-Fi and utilities included' }))),
+    tenants: T.filter(t => t.id !== 'tn5'),
+    payments: {}, // "2026-11": { tenantId: "2026-11-01" }
+    renos: [],
+    ads: {}, // unitId -> { title, body, avail, ch: { chId: { posted, leads, spent } } }
+    docs: [],
+    chores: {}, // "propId|floorId|mondayISO" -> true (done)
+    usage: { views: {}, days: {}, first: today() },
+    qc: { last: '', reports: [] }
+  };
+}
+
+function load() {
+  try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
+  if (!S || !S.v) S = seed();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+
+/* ---------- lookups ---------- */
+const byId = (list, id) => list.find(x => x.id === id);
+const propsOf = pf => S.properties.filter(p => p.pf === pf);
+const unitsOf = pid => S.units.filter(u => u.prop === pid);
+const curPf = () => byId(S.portfolios, S.ui.pf) || S.portfolios[0];
+const tenantUnit = tid => S.units.find(u => u.tenant === tid);
+const pfTenants = pf => S.tenants.filter(t => { const u = tenantUnit(t.id); return u && byId(S.properties, u.prop).pf === pf; });
+
+/* ---------- money math ---------- */
+// Canadian fixed mortgages compound twice a year.
+const mRate = annualPct => Math.pow(1 + (annualPct || 0) / 200, 1 / 6) - 1;
+function mortgagePay(bal, ratePct, years) {
+  const i = mRate(ratePct), n = (years || 25) * 12;
+  if (!bal) return 0;
+  return i ? bal * i / (1 - Math.pow(1 + i, -n)) : bal / n;
+}
+const perMonth = e => e.per === 'y' ? (e.amount || 0) / 12 : (e.amount || 0);
+function propFin(p) {
+  const us = unitsOf(p.id);
+  const potential = us.reduce((a, u) => a + (u.rent || 0), 0);
+  const rent = us.filter(u => u.tenant).reduce((a, u) => a + (u.rent || 0), 0);
+  const opex = p.expenses.reduce((a, e) => a + perMonth(e), 0);
+  const m = p.mortgage || {};
+  const pay = m.payment > 0 ? m.payment : mortgagePay(m.balance, m.rate, m.years);
+  const interest = Math.min(pay, (m.balance || 0) * mRate(m.rate));
+  const principal = Math.max(0, pay - interest);
+  const noi = rent - opex, cash = noi - pay;
+  return { potential, rent, vacancy: potential - rent, opex, pay, interest, principal, noi, cash,
+    value: p.value || 0, equity: (p.value || 0) - (m.balance || 0), invested: p.invested || 0,
+    cap: p.value ? noi * 12 / p.value : NaN, coc: p.invested ? cash * 12 / p.invested : NaN,
+    roi: p.invested ? (cash + principal) * 12 / p.invested : NaN,
+    rooms: us.length, empty: us.filter(u => !u.tenant).length };
+}
+function pfFin(pf) {
+  const keys = ['potential', 'rent', 'vacancy', 'opex', 'pay', 'interest', 'principal', 'noi', 'cash', 'value', 'equity', 'invested', 'rooms', 'empty'];
+  const t = Object.fromEntries(keys.map(k => [k, 0]));
+  propsOf(pf.id).forEach(p => { const f = propFin(p); keys.forEach(k => t[k] += f[k]); });
+  t.cap = t.value ? t.noi * 12 / t.value : NaN;
+  t.coc = t.invested ? t.cash * 12 / t.invested : NaN;
+  t.roi = t.invested ? (t.cash + t.principal) * 12 / t.invested : NaN;
+  t.fee = pf.kind === 'managed' ? t.rent * (pf.feePct || 0) / 100 : 0;
+  return t;
+}
+function renoCalc(r) {
+  const total = (r.cost || 0) + (r.lost || 0);
+  const yearly = (r.rentUp || 0) * 12;
+  const loanPay = r.financed ? mortgagePay(r.cost, r.rate, r.years) * 12 : 0;
+  const payback = yearly > 0 ? total / yearly : Infinity;
+  const roi = total ? yearly / total : NaN;
+  let interest5 = 0;
+  if (r.financed) { let bal = r.cost || 0; const i = mRate(r.rate), pm = loanPay / 12; for (let k = 0; k < 60 && bal > 0; k++) { const it = bal * i; interest5 += it; bal -= pm - it; } }
+  const five = yearly * 5 + (r.valueUp || 0) - total - interest5;
+  let verdict = ['b', 'Probably not worth it for the rent alone'];
+  if (payback <= 3) verdict = ['g', 'Strong — pays for itself in ' + payback.toFixed(1) + ' years'];
+  else if (payback <= 6) verdict = ['w', 'Okay — pays for itself in ' + payback.toFixed(1) + ' years'];
+  else if (isFinite(payback)) verdict = ['b', 'Slow — takes ' + payback.toFixed(1) + ' years to pay back'];
+  return { total, yearly, loanPay, payback, roi, five, verdict };
+}
+
+/* ---------- cleaning and garbage rotation ---------- */
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+function mondayOf(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+function weekIdx(p, date) { return Math.round((mondayOf(date) - mondayOf(pDate(p.choreStart || '2026-01-05'))) / 6048e5); }
+const mod = (a, n) => ((a % n) + n) % n;
+function floorTenants(p, fid) { return unitsOf(p.id).filter(u => u.floor === fid && u.tenant).map(u => byId(S.tenants, u.tenant)).filter(Boolean); }
+function cleanerFor(p, fid, w) { const l = floorTenants(p, fid); return l.length ? l[mod(w, l.length)] : null; }
+// Garbage rotates through everyone in the house, arranged so nobody gets cleaning and garbage in the same week.
+function garbageOrder(p) {
+  const pool = [];
+  p.floors.forEach(f => { const l = floorTenants(p, f.id); l.forEach((t, i) => pool.push({ t, i, n: l.length, f: f.id })); });
+  const out = []; let lastF = null;
+  for (let pos = 0; pos < pool.length; pos++) {
+    const free = pool.filter(x => !out.includes(x));
+    const ok = free.filter(x => x.n < 2 || mod(pos, x.n) !== x.i);
+    const pick = (ok.find(x => x.f !== lastF) || ok[0] || free[0]);
+    out.push(pick); lastF = pick.f;
+  }
+  return out.map(x => x.t);
+}
+function garbageFor(p, w) {
+  const l = garbageOrder(p); if (!l.length) return null;
+  if (w < 0) return l[mod(w, l.length)];
+  // Each week: among people who are not cleaning, pick whoever has done garbage least (then longest ago). Keeps it fair even when a room is empty.
+  const cnt = new Map(l.map(t => [t, 0])), last = new Map(l.map((t, i) => [t, i - 100])); let pick;
+  for (let k = 0; k <= w; k++) {
+    const busy = p.floors.map(f => cleanerFor(p, f.id, k)), free = l.filter(t => !busy.includes(t)), pool = free.length ? free : l;
+    pick = pool.reduce((a, b) => (cnt.get(b) < cnt.get(a) || (cnt.get(b) === cnt.get(a) && last.get(b) < last.get(a))) ? b : a);
+    cnt.set(pick, cnt.get(pick) + 1); last.set(pick, k);
+  }
+  return pick;
+}
+const wasteType = (p, w) => (mod(w, 2) === 0) !== !!p.wasteFlip ? 'Garbage' : 'Recycling';
+function schedule(p, weeks = 8, from = new Date()) {
+  const w0 = weekIdx(p, from), m0 = mondayOf(from), rows = [];
+  for (let k = 0; k < weeks; k++) {
+    const mon = new Date(m0); mon.setDate(mon.getDate() + k * 7);
+    const pick = new Date(mon); pick.setDate(pick.getDate() + mod((p.wasteDay ?? 2) - 1, 7));
+    rows.push({ mon: iso(mon), pickup: iso(pick), w: w0 + k, waste: wasteType(p, w0 + k), garbage: garbageFor(p, w0 + k),
+      clean: p.floors.map(f => ({ f, t: cleanerFor(p, f.id, w0 + k) })) });
+  }
+  return rows;
+}
+
+/* ---------- rent rules ---------- */
+function increaseInfo(t) {
+  const u = tenantUnit(t.id); if (!u || !t.leaseStart) return null;
+  const base = t.lastIncrease || t.leaseStart;
+  const next = pDate(base); next.setFullYear(next.getFullYear() + 1);
+  const g = GUIDELINE[next.getFullYear()] ?? GUIDELINE[2027];
+  const notice = new Date(next); notice.setDate(notice.getDate() - 90);
+  return { next: iso(next), noticeBy: iso(notice), g, up: Math.round(u.rent * g) / 100, daysToNotice: daysBetween(today(), iso(notice)) };
+}
+
+/* ---------- things that need attention (used by Home and the weekly check-up) ---------- */
+function findings(pf) {
+  const out = [], add = (sev, text, view, tip) => out.push({ sev, text, view, tip });
+  const mk = monthKey(), paid = S.payments[mk] || {}, dom = new Date().getDate();
+  if (S.sample) add('med', 'The app still has example numbers. Replace them with your real rents, mortgage and bills.', 'properties');
+  propsOf(pf.id).forEach(p => {
+    const f = propFin(p);
+    unitsOf(p.id).forEach(u => {
+      if (!u.tenant) {
+        add('high', `${u.name} at ${p.name} is empty — that costs about ${money(u.rent / 30)} every day.`, 'market');
+        const ad = S.ads[u.id], posts = ad ? Object.values(ad.ch || {}).filter(c => c.posted) : [];
+        if (!posts.length) add('high', `No ad is posted yet for ${u.name}.`, 'market');
+        else if (posts.every(c => daysBetween(c.posted, today()) > 7)) add('med', `The ads for ${u.name} are more than a week old. Refresh them so they go back to the top.`, 'market');
+      } else if (u.market > u.rent * 1.05) add('low', `${u.name} rents for ${money(u.rent)} but similar rooms get about ${money(u.market)}. Use the higher price when the next tenant moves in.`, 'properties');
+    });
+    if (f.cash < 0 && pf.kind === 'owned') add('high', `${p.name} loses ${money(-f.cash)} a month after the mortgage and bills.`, 'money');
+    if (f.rent && f.opex / f.rent > 0.5) add('low', `Bills at ${p.name} take ${pct(f.opex / f.rent)} of the rent. Worth checking insurance and utility prices.`, 'properties');
+    if (unitsOf(p.id).length >= 4 && /toronto|north york|scarborough|etobicoke/i.test(p.address) && !(p.compliance || {}).licence)
+      add('high', `${p.name} has 4 or more rented rooms. Toronto requires a multi-tenant house licence — tick it off once you have it.`, 'contracts');
+  });
+  pfTenants(pf.id).forEach(t => {
+    const u = tenantUnit(t.id), p = byId(S.properties, u.prop);
+    if (dom > 3 && !paid[t.id]) add('high', `${t.name} (${u.name}) has not been marked as paid for this month.`, 'money');
+    if (!t.email) add('low', `${t.name} has no email saved, so documents cannot be sent.`, 'people');
+    const docs = S.docs.filter(d => d.tenant === t.id);
+    if (p.camera && !docs.some(d => d.kind === 'camera' && d.status === 'signed')) add('med', `${t.name} has not signed the outdoor camera notice.`, 'contracts');
+    if (p.floors.length && !docs.some(d => d.kind === 'rules' && d.status === 'signed')) add('low', `${t.name} has not signed the house rules and cleaning agreement.`, 'contracts');
+    const inc = increaseInfo(t);
+    if (inc && inc.daysToNotice <= 30) add('med', `${t.name}: you can raise the rent by up to ${inc.g}% (${money(inc.up, 2)} a month) from ${nice(inc.next)}. Form N1 must be given by ${nice(inc.noticeBy)}.`, 'contracts');
+  });
+  const lb = S.settings.lastBackup;
+  if (!lb || daysBetween(lb, today()) > 7) add('low', 'No backup saved in the last week. Save one so your numbers are never lost.', 'settings');
+  return out;
+}
+function qcScore(list) { return Math.max(0, 100 - list.reduce((a, f) => a + ({ high: 12, med: 6, low: 2 }[f.sev]), 0)); }
+
+/* ---------- private tenant links (packed into the link itself) ---------- */
+async function pack(obj) {
+  let bytes = new TextEncoder().encode(JSON.stringify(obj)), z = '0';
+  if (window.CompressionStream) { bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); z = '1'; }
+  let b = ''; bytes.forEach(c => b += String.fromCharCode(c));
+  return z + btoa(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function unpack(s) {
+  let bytes = Uint8Array.from(atob(s.slice(1).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  if (s[0] === '1') bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+function tenantPayload(t) {
+  const u = tenantUnit(t.id), p = byId(S.properties, u.prop), fl = byId(p.floors, u.floor);
+  const first = x => x ? x.name : '—';
+  return { n: t.name, u: u.name, p: p.name, a: p.address, ll: S.settings.landlord, le: S.settings.email, lp: S.settings.phone, rent: u.rent,
+    made: today(), fl: fl ? fl.name : '', tasks: fl ? fl.tasks : '', day: DAYS[p.wasteDay ?? 2],
+    sch: fl ? schedule(p, 12).map(r => ({ m: r.mon, pk: r.pickup, w: r.waste, g: first(r.garbage), c: first((r.clean.find(c => c.f.id === fl.id) || {}).t) })) : [],
+    docs: S.docs.filter(d => d.tenant === t.id && d.status !== 'draft').map(d => ({ t: d.title, b: d.body, s: d.status })) };
+}
+const isHosted = () => /^https?:/.test(location.protocol);
+async function tenantLink(t) { return location.href.split('#')[0] + '#t=' + await pack(tenantPayload(t)); }
+
+/* ---------- small UI helpers ---------- */
+function toast(msg) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+async function copy(text) { try { await navigator.clipboard.writeText(text); } catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } }
+function resolve(path) {
+  const segs = path.split('.'); let o = S;
+  for (let i = 0; i < segs.length - 1; i++) {
+    const [k, id] = segs[i].split(':');
+    o = id !== undefined ? o[k].find(x => x.id === id) : (o[k] ??= {});
+  }
+  return [o, segs[segs.length - 1]];
+}
+const num = (path, val, w) => `<input class="in" type="number" step="any" data-bind="${path}" data-type="num" value="${val ?? ''}"${w ? ` style="width:${w}px"` : ''} aria-label="${esc(path.split('.').pop())}">`;
+const txt = (path, val, ph = '', type = 'text') => `<input class="in" type="${type}" data-bind="${path}" value="${esc(val)}" placeholder="${esc(ph)}">`;
+const field = (label, html) => `<label class="f">${esc(label)}${html}</label>`;
+const sel = (path, val, opts, type = '') => `<select data-bind="${path}" data-type="${type}">${opts.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(val ?? '') ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+/* Doorstep — shell, Home, Properties, Money, Renovations */
+const NAV = [['home', '🏠', 'Home'], ['properties', '🏘️', 'Properties'], ['money', '💵', 'Money'], ['reno', '🔨', 'Renovations'], ['market', '📣', 'Find tenants'], ['contracts', '📄', 'Contracts & rules'], ['chores', '🧹', 'Cleaning & garbage'], ['people', '👥', 'Tenants & links'], ['qc', '✅', 'Weekly check-up'], ['settings', '⚙️', 'Settings']];
+const V = {}, A = {};
+let unlocked = false;
+
+function render() {
+  if (S.settings.pin && !unlocked) {
+    $('#app').innerHTML = `<main><div class="card lock"><h1>🏠 Doorstep</h1><p>Enter your PIN</p><input class="in" id="pin" type="password" inputmode="numeric" autofocus style="text-align:center;font-size:1.4rem;width:10rem"><p><button class="btn" data-act="unlock">Open</button></p></div></main>`;
+    return;
+  }
+  const y = scrollY, fb = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.bind : null;
+  const pf = curPf(), urgent = findings(pf).filter(f => f.sev === 'high').length, v = V[S.ui.view] ? S.ui.view : 'home';
+  $('#app').innerHTML = `<nav aria-label="Main menu"><div class="logo">🏠 Doorstep</div>${NAV.map(([id, ic, l]) => `<button class="${id === v ? 'on' : ''}" data-act="nav" data-arg="${id}"${id === v ? ' aria-current="page"' : ''}><span aria-hidden="true">${ic}</span>${l}${id === 'qc' && urgent ? `<span class="badge" title="${urgent} urgent items">${urgent}</span>` : ''}</button>`).join('')}</nav>
+  <main><div class="top"><label class="small" for="pfsel">Showing</label>${sel('ui.pf', S.ui.pf, S.portfolios.map(p => [p.id, p.name + (p.kind === 'managed' ? ' (managed for a client)' : '')])).replace('<select', '<select id="pfsel"')}</div>
+  ${S.sample ? `<div class="banner"><span>👋 These are <b>example numbers</b>. Open <b>Properties</b> and type your real rents, mortgage and bills over them.</span><button class="btn sm sec" data-act="clearSample">I've entered my real numbers</button></div>` : ''}
+  ${V[v](pf)}</main>`;
+  scrollTo(0, y);
+  if (fb) { const el = document.querySelector(`[data-bind="${fb}"]`); if (el) el.focus(); }
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  if (TP) { A[el.dataset.act](el.dataset.arg, el); return; }
+  if (el.dataset.confirm && !el._armed) { const old = el.textContent; el._armed = 1; el.textContent = 'Tap again to confirm'; setTimeout(() => { if (el.isConnected) { el._armed = 0; el.textContent = old; } }, 3500); return; }
+  const r = A[el.dataset.act](el.dataset.arg, el);
+  if (r instanceof Promise) r.then(() => { save(); render(); }); else if (r !== false) { save(); render(); }
+});
+document.addEventListener('change', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.bind) return;
+  const [o, k] = resolve(el.dataset.bind);
+  o[k] = el.type === 'checkbox' ? el.checked : el.dataset.type === 'num' ? (parseFloat(el.value) || 0) : el.value;
+  save(); render();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'pin') A.unlock(); });
+
+function track(view) { const u = S.usage; (u.views[view] ??= { n: 0, last: '' }).n++; u.views[view].last = today(); u.days[today()] = 1; }
+A.nav = v => { S.ui.view = v; track(v); save(); render(); scrollTo(0, 0); return false; };
+A.unlock = () => { if ($('#pin').value === S.settings.pin) { unlocked = true; render(); } else toast('That PIN is not right'); return false; };
+A.clearSample = () => { S.sample = false; };
+
+/* ---------------- Home ---------------- */
+V.home = pf => {
+  const f = pfFin(pf), fs = findings(pf), managed = pf.kind === 'managed';
+  const used = Object.entries(S.usage.views).filter(([k]) => k !== 'home' && V[k]).sort((a, b) => b[1].n - a[1].n).slice(0, 4).map(([k]) => k);
+  const quick = [...new Set([...used, 'money', 'market', 'chores', 'contracts'])].slice(0, 4);
+  const h = new Date().getHours(), hi = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const stats = managed ? [
+    ['Rent collected each month', money(f.rent), `${f.rooms - f.empty} of ${f.rooms} rooms rented`],
+    ['Your management fee', money(f.fee), `${pf.feePct}% of the rent`, 'pos'],
+    ["Owner's money left over", money(f.cash - f.fee), 'after bills, mortgage and your fee', f.cash - f.fee >= 0 ? 'pos' : 'neg'],
+    ["Owner's return", pct(f.invested ? (f.cash - f.fee + f.principal) * 12 / f.invested : NaN), 'per year on the cash they put in']
+  ] : [
+    ['Rent coming in each month', money(f.rent), f.vacancy ? `${money(f.vacancy)} more if every room is rented` : 'every room is rented 🎉'],
+    ['Going out each month', money(f.opex + f.pay), `${money(f.pay)} mortgage + ${money(f.opex)} bills`],
+    ['Left in your pocket', money(f.cash), `${money(f.cash * 12)} a year`, f.cash >= 0 ? 'pos' : 'neg'],
+    ['Return on your money', pct(f.roi), `${pct(f.coc)} cash + mortgage paid down`, f.roi >= 0 ? 'pos' : 'neg']
+  ];
+  return `<h1>${hi}${S.settings.landlord ? ', ' + esc(S.settings.landlord.split(' ')[0]) : ''}</h1><div class="sub">${esc(pf.name)} — ${nice(today())}</div>
+  <div class="grid">${stats.map(([l, v, hint, c]) => `<div class="stat"><div class="l">${l}</div><div class="v ${c || ''}">${v}</div><div class="h">${hint}</div></div>`).join('')}</div>
+  <div class="card"><h2>What needs your attention</h2>${fs.length ? fs.slice(0, 6).map(todoRow).join('') + (fs.length > 6 ? `<p><button class="btn ghost" data-act="nav" data-arg="qc">See all ${fs.length} items →</button></p>` : '') : '<p>Nothing right now. Everything is in good shape. 🌿</p>'}</div>
+  <div class="card"><h2>Your shortcuts</h2><p class="small">These change over time to match what you use most.</p><div class="row">${quick.map(k => { const n = NAV.find(x => x[0] === k); return `<button class="btn sec" data-act="nav" data-arg="${k}">${n[1]} ${n[2]}</button>`; }).join('')}</div></div>
+  <div class="card"><h2>Each property this month</h2><div class="tw"><table><tr><th>Property</th><th class="n">Rent in</th><th class="n">Bills</th><th class="n">Mortgage</th><th class="n">Left over</th><th>Rooms</th></tr>
+  ${propsOf(pf.id).map(p => { const x = propFin(p); return `<tr><td><b>${esc(p.name)}</b></td><td class="n">${money(x.rent)}</td><td class="n">${money(x.opex)}</td><td class="n">${money(x.pay)}</td><td class="n ${x.cash >= 0 ? 'pos' : 'neg'}"><b>${money(x.cash)}</b></td><td>${x.empty ? `<span class="chip b">${x.empty} empty</span>` : '<span class="chip g">Full</span>'}</td></tr>`; }).join('') || '<tr><td colspan="6">No properties yet. Add one under Properties.</td></tr>'}</table></div></div>`;
+};
+const todoRow = f => `<div class="todo"><span class="dot ${f.sev}" title="${f.sev === 'high' ? 'Urgent' : f.sev === 'med' ? 'Soon' : 'When you have time'}"></span><span class="t">${esc(f.text)}</span><button class="btn sm sec" data-act="nav" data-arg="${f.view}">Open</button></div>`;
+
+/* ---------------- Properties ---------------- */
+V.properties = pf => `<h1>Properties</h1><div class="sub">Type your real numbers here. Everything else in the app is worked out from them.</div>
+  <div class="card"><h2>This group: ${esc(pf.name)}</h2><p class="small">A group keeps one owner's properties and money separate. Make a new group for each client you manage for.</p>
+  <div class="form">${field('Group name', txt(`portfolios:${pf.id}.name`, pf.name))}${field('Whose is it?', sel(`portfolios:${pf.id}.kind`, pf.kind, [['owned', 'Ours'], ['managed', 'I manage it for a client']]))}
+  ${pf.kind === 'managed' ? field('Client name', txt(`portfolios:${pf.id}.owner`, pf.owner)) + field('My fee (% of rent)', num(`portfolios:${pf.id}.feePct`, pf.feePct)) : ''}</div>
+  <div class="row"><button class="btn sec" data-act="addPf">＋ New group (for a client)</button>${S.portfolios.length > 1 ? `<button class="btn del" data-act="delPf" data-arg="${pf.id}" data-confirm="1">Delete this group</button>` : ''}</div></div>
+  ${propsOf(pf.id).map(propCard).join('')}
+  <button class="btn" data-act="addProp">＋ Add a property</button>`;
+
+function propCard(p) {
+  const f = propFin(p), open = S.ui.open === p.id, b = `properties:${p.id}`;
+  const free = S.tenants.filter(t => !tenantUnit(t.id));
+  const head = `<div class="row sp"><div><h2 style="margin:0">${esc(p.name)}</h2><span class="small">${esc(p.address)} · ${f.rooms} unit${f.rooms === 1 ? '' : 's'} · ${money(f.rent)} rent · <b class="${f.cash >= 0 ? 'pos' : 'neg'}">${money(f.cash)} left over</b> a month</span></div><button class="btn sec" data-act="openProp" data-arg="${p.id}" aria-expanded="${open}">${open ? 'Close' : 'Open and edit'}</button></div>`;
+  if (!open) return `<div class="card">${head}</div>`;
+  return `<div class="card">${head}
+  <h3>The basics</h3><div class="form">${field('Name', txt(b + '.name', p.name))}${field('Address', txt(b + '.address', p.address))}${field('What it is worth today ($)', num(b + '.value', p.value))}${field('Cash we put in ($) — down payment + renovations', num(b + '.invested', p.invested))}</div>
+  <h3>Mortgage</h3><div class="form">${field('Amount still owed ($)', num(b + '.mortgage.balance', p.mortgage.balance))}${field('Interest rate (%)', num(b + '.mortgage.rate', p.mortgage.rate))}${field('Years left to pay', num(b + '.mortgage.years', p.mortgage.years))}${field('Monthly payment ($) — leave 0 to calculate', num(b + '.mortgage.payment', p.mortgage.payment))}</div>
+  <div class="note">Payment <b>${money(f.pay)}</b> a month. Of that, <b>${money(f.interest)}</b> is interest (gone) and <b>${money(f.principal)}</b> pays down the loan (you keep it as equity).</div>
+  <h3>Bills and expenses</h3><div class="tw"><table><tr><th>What</th><th class="n">Amount ($)</th><th>How often</th><th></th></tr>
+  ${p.expenses.map(e => `<tr><td>${txt(`${b}.expenses:${e.id}.name`, e.name)}</td><td class="n">${num(`${b}.expenses:${e.id}.amount`, e.amount)}</td><td>${sel(`${b}.expenses:${e.id}.per`, e.per, [['m', 'every month'], ['y', 'once a year']])}</td><td><button class="btn del" data-act="delExp" data-arg="${p.id}|${e.id}" aria-label="Remove ${esc(e.name)}">Remove</button></td></tr>`).join('')}
+  <tr><td colspan="4"><button class="btn ghost" data-act="addExp" data-arg="${p.id}">＋ Add a bill</button> <span class="small">Total: ${money(f.opex)} a month</span></td></tr></table></div>
+  <h3>Rooms / units</h3><div class="tw"><table><tr><th>Name</th>${p.floors.length ? '<th>Floor</th>' : ''}<th class="n">Rent now ($)</th><th class="n">Market rent ($)</th><th>Who lives there</th><th></th></tr>
+  ${unitsOf(p.id).map(u => `<tr><td>${txt(`units:${u.id}.name`, u.name)}</td>${p.floors.length ? `<td>${sel(`units:${u.id}.floor`, u.floor, [['', '—'], ...p.floors.map(x => [x.id, x.name])])}</td>` : ''}<td class="n">${num(`units:${u.id}.rent`, u.rent, 100)}</td><td class="n">${num(`units:${u.id}.market`, u.market, 100)}</td><td>${sel(`units:${u.id}.tenant`, u.tenant, [['', '— empty —'], ...S.tenants.filter(t => t.id === u.tenant || free.includes(t)).map(t => [t.id, t.name])])}</td><td><button class="btn del" data-act="delUnit" data-arg="${u.id}" data-confirm="1">Remove</button></td></tr>`).join('')}
+  <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
+  <h3>Other</h3><label class="row"><input type="checkbox" data-bind="${b}.camera" ${p.camera ? 'checked' : ''}> There is a security camera outside this property</label>
+  <p style="margin-top:1rem"><button class="btn del" data-act="delProp" data-arg="${p.id}" data-confirm="1">Delete this property</button></p></div>`;
+}
+A.openProp = id => { S.ui.open = S.ui.open === id ? '' : id; };
+A.addPf = () => { const id = uid(); S.portfolios.push({ id, name: 'New client', kind: 'managed', feePct: 8, owner: '' }); S.ui.pf = id; toast('New group made. Give it a name.'); };
+A.delPf = id => { propsOf(id).forEach(p => A.delProp(p.id)); S.portfolios = S.portfolios.filter(p => p.id !== id); S.ui.pf = S.portfolios[0].id; };
+A.addProp = () => { const id = uid(); S.properties.push({ id, pf: curPf().id, name: 'New property', address: '', value: 0, invested: 0, mortgage: { balance: 0, rate: 5, years: 25, payment: 0 }, expenses: [], floors: [], camera: false, wasteDay: 2, wasteFlip: false, choreStart: '2026-01-05', compliance: {} }); S.units.push({ id: uid(), prop: id, name: 'Unit 1', floor: '', rent: 0, market: 0, tenant: '', desc: '' }); S.ui.open = id; };
+A.delProp = id => { S.units = S.units.filter(u => u.prop !== id); S.properties = S.properties.filter(p => p.id !== id); S.renos = S.renos.filter(r => r.prop !== id); };
+A.addExp = pid => { byId(S.properties, pid).expenses.push({ id: uid(), name: 'New bill', amount: 0, per: 'm' }); };
+A.delExp = arg => { const [pid, eid] = arg.split('|'), p = byId(S.properties, pid); p.expenses = p.expenses.filter(e => e.id !== eid); };
+A.addUnit = pid => { const p = byId(S.properties, pid); S.units.push({ id: uid(), prop: pid, name: 'Room ' + (unitsOf(pid).length + 1), floor: p.floors[0] ? p.floors[0].id : '', rent: 0, market: 0, tenant: '', desc: '' }); };
+A.delUnit = id => { S.units = S.units.filter(u => u.id !== id); delete S.ads[id]; };
+A.addFloor = pid => { const p = byId(S.properties, pid); p.floors.push({ id: uid(), name: 'Floor ' + (p.floors.length + 1), tasks: 'Kitchen\nWashroom\nCorridor\nVacuum and mop\nEmpty bins' }); toast('Floor added. Rename it under Cleaning & garbage.'); };
+
+/* ---------------- Money ---------------- */
+V.money = pf => {
+  const f = pfFin(pf), mk = S.ui.month || monthKey(), paid = S.payments[mk] || {}, ts = pfTenants(pf.id);
+  const expected = ts.reduce((a, t) => a + tenantUnit(t.id).rent, 0), got = ts.filter(t => paid[t.id]).reduce((a, t) => a + tenantUnit(t.id).rent, 0);
+  const parts = [['Bills', f.opex, '#c9803a'], ['Mortgage interest', f.interest, '#b3261e'], ['Mortgage paid down (yours)', f.principal, '#5b8fd9'], ['Left in your pocket', Math.max(0, f.cash), '#1a7f4b']];
+  const tot = parts.reduce((a, x) => a + x[1], 0) || 1;
+  const mName = pDate(mk + '-01').toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
+  return `<h1>Money</h1><div class="sub">${esc(pf.name)}</div>
+  <div class="card"><div class="row sp"><h2 style="margin:0">Rent for ${mName}</h2><div class="row"><button class="btn sm sec" data-act="month" data-arg="-1">← Earlier</button><button class="btn sm sec" data-act="month" data-arg="1">Later →</button></div></div>
+  <p><b>${money(got)}</b> received of ${money(expected)} expected.</p>
+  <div class="tw"><table><tr><th>Tenant</th><th>Room</th><th class="n">Rent</th><th>Status</th><th></th></tr>${ts.map(t => { const u = tenantUnit(t.id); return `<tr><td>${esc(t.name)}</td><td>${esc(u.name)}</td><td class="n">${money(u.rent)}</td><td>${paid[t.id] ? `<span class="chip g">Paid ${nice(paid[t.id])}</span>` : '<span class="chip w">Not yet</span>'}</td><td><button class="btn sm ${paid[t.id] ? 'ghost' : ''}" data-act="pay" data-arg="${t.id}">${paid[t.id] ? 'Undo' : 'Mark as paid'}</button></td></tr>`; }).join('') || '<tr><td colspan="5">No tenants yet.</td></tr>'}</table></div></div>
+  <div class="card"><h2>Where each month's rent goes</h2>
+  <div class="bar" role="img" aria-label="Split of monthly rent">${parts.map(([l, v, c]) => `<div style="background:${c};flex:${v / tot}" title="${l}: ${money(v)}"></div>`).join('')}</div>
+  <div class="legend">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l}: <b>${money(v)}</b></span>`).join('')}</div>
+  ${f.cash < 0 ? `<div class="note b">Right now the rent does not cover everything. You are short ${money(-f.cash)} a month.</div>` : ''}</div>
+  <div class="card"><h2>The full picture</h2><div class="tw"><table><tr><th></th>${propsOf(pf.id).map(p => `<th class="n">${esc(p.name)}</th>`).join('')}<th class="n">Total</th></tr>
+  ${[['Rent coming in (month)', 'rent'], ['Lost to empty rooms', 'vacancy'], ['Bills', 'opex'], ['Mortgage payment', 'pay'], ['— interest part', 'interest'], ['— paid down (yours)', 'principal'], ['Left in your pocket (month)', 'cash'], ['Left in your pocket (year)', 'cash', 12], ['Your share if sold (equity)', 'equity']].map(([l, k, m = 1]) => `<tr><td>${l}</td>${propsOf(pf.id).map(p => `<td class="n">${money(propFin(p)[k] * m)}</td>`).join('')}<td class="n"><b>${money(f[k] * m)}</b></td></tr>`).join('')}
+  ${[['Return on the cash you put in', 'coc'], ['Return including loan paid down', 'roi'], ['Return on the property value (cap rate)', 'cap']].map(([l, k]) => `<tr><td>${l}</td>${propsOf(pf.id).map(p => `<td class="n">${pct(propFin(p)[k])}</td>`).join('')}<td class="n"><b>${pct(f[k])}</b></td></tr>`).join('')}
+  ${pf.kind === 'managed' ? `<tr><td>My management fee (${pf.feePct}%)</td>${propsOf(pf.id).map(p => `<td class="n">${money(propFin(p).rent * pf.feePct / 100)}</td>`).join('')}<td class="n"><b>${money(f.fee)}</b></td></tr>` : ''}</table></div>
+  <p class="noprint"><button class="btn sec" data-act="print">🖨️ Print or save as PDF${pf.kind === 'managed' ? ' for the owner' : ''}</button></p></div>
+  <div class="card noprint"><h2>What these words mean</h2><ul class="tight">
+  <li><b>Left in your pocket</b> — rent minus bills minus the mortgage payment. This is real cash.</li>
+  <li><b>Return on the cash you put in</b> — yearly cash left over ÷ your down payment and renovation money. A savings account pays about 3%, so compare with that.</li>
+  <li><b>Return including loan paid down</b> — the same, plus the part of the mortgage payment that reduces what you owe. This is the truest “how is my investment doing” number.</li>
+  <li><b>Cap rate</b> — how the building performs ignoring the mortgage. Useful when comparing two buildings.</li>
+  <li>House price growth is <b>not</b> counted in any of these. It is a bonus on top.</li></ul></div>`;
+};
+A.pay = tid => { const m = (S.payments[S.ui.month || monthKey()] ??= {}); if (m[tid]) delete m[tid]; else m[tid] = today(); };
+A.month = d => { const x = pDate((S.ui.month || monthKey()) + '-01'); x.setMonth(x.getMonth() + Number(d)); S.ui.month = monthKey(x); };
+A.print = () => { window.print(); return false; };
+
+/* ---------------- Renovations ---------------- */
+const PRESETS = [
+  ['Fresh paint, better lighting, deep clean', 4500, 150, 5000], ['Furnish a room (bed, desk, wardrobe)', 1200, 100, 0], ['Add a second washroom', 18000, 300, 20000],
+  ['Keypad locks on every door', 1500, 60, 0], ['New kitchen counters and appliances', 15000, 240, 15000], ['Heat pump or insulation (lower bills)', 9000, 120, 6000]];
+V.reno = pf => {
+  const ps = propsOf(pf.id), list = S.renos.filter(r => ps.some(p => p.id === r.prop));
+  return `<h1>Renovations</h1><div class="sub">Thinking about a project? Put in the cost and the extra rent. The app tells you if it is worth it.</div>
+  <div class="card"><h2>Start a new idea</h2><div class="row"><button class="btn" data-act="addReno">＋ Blank project</button>${PRESETS.map((p, i) => `<button class="btn sec sm" data-act="addReno" data-arg="${i}">${p[0]}</button>`).join('')}</div>
+  <p class="small">The ready-made ideas use rough Toronto guesses. Replace them with real quotes from a contractor.</p></div>
+  ${list.map(r => {
+    const c = renoCalc(r), b = `renos:${r.id}`, p = byId(S.properties, r.prop), f = propFin(p);
+    const newCoc = (f.cash * 12 + c.yearly - c.loanPay) / ((f.invested || 0) + (r.financed ? (r.lost || 0) : c.total) || 1);
+    return `<div class="card"><div class="row sp"><h2 style="margin:0">${esc(r.name)}</h2><span class="chip ${c.verdict[0]}">${c.verdict[1]}</span></div>
+    <div class="form">${field('Project name', txt(b + '.name', r.name))}${field('Which property', sel(b + '.prop', r.prop, ps.map(x => [x.id, x.name])))}${field('Cost of the work ($)', num(b + '.cost', r.cost))}${field('Extra rent or savings each month ($)', num(b + '.rentUp', r.rentUp))}${field('Rent lost while work is done ($)', num(b + '.lost', r.lost))}${field('Added to the property value ($)', num(b + '.valueUp', r.valueUp))}</div>
+    <label class="row"><input type="checkbox" data-bind="${b}.financed" ${r.financed ? 'checked' : ''}> I would borrow the money for this</label>
+    ${r.financed ? `<div class="form">${field('Loan interest rate (%)', num(b + '.rate', r.rate))}${field('Years to pay it back', num(b + '.years', r.years))}</div>` : ''}
+    <div class="grid" style="margin-top:.8rem">
+      <div class="stat"><div class="l">Total you spend</div><div class="v">${money(c.total)}</div><div class="h">work + lost rent</div></div>
+      <div class="stat"><div class="l">Extra money each year</div><div class="v pos">${money(c.yearly)}</div><div class="h">${r.financed ? `loan costs ${money(c.loanPay)} a year` : 'from higher rent or lower bills'}</div></div>
+      <div class="stat"><div class="l">Return each year</div><div class="v">${pct(c.roi)}</div><div class="h">pays back in ${isFinite(c.payback) ? c.payback.toFixed(1) + ' years' : '—'}</div></div>
+      <div class="stat"><div class="l">After 5 years you are ahead by</div><div class="v ${c.five >= 0 ? 'pos' : 'neg'}">${money(c.five)}</div><div class="h">including added value</div></div>
+    </div>
+    <p>For <b>${esc(p.name)}</b>, the return on your cash would go from <b>${pct(f.coc)}</b> to about <b>${pct(newCoc)}</b>.</p>
+    <button class="btn del" data-act="delReno" data-arg="${r.id}" data-confirm="1">Delete this project</button></div>`;
+  }).join('')}
+  <div class="note w"><b>Two Ontario rules to keep in mind</b><ul class="tight"><li>A renovation does not let you raise the rent of a tenant who already lives there beyond the yearly guideline (${GUIDELINE[2026]}% in 2026, ${GUIDELINE[2027]}% in 2027). The extra rent comes when a new tenant moves in, or through a Landlord and Tenant Board “above guideline increase” for major work.</li><li>In North York a house can have at most 6 rented rooms, so adding a 7th room is not allowed without City approval.</li></ul></div>`;
+};
+A.addReno = i => { const p = PRESETS[i], pr = propsOf(curPf().id)[propsOf(curPf().id).length - 1]; if (!pr) { toast('Add a property first'); return false; } S.renos.unshift({ id: uid(), prop: pr.id, name: p ? p[0] : 'New project', cost: p ? p[1] : 0, rentUp: p ? p[2] : 0, valueUp: p ? p[3] : 0, lost: 0, financed: false, rate: 7, years: 5 }); };
+A.delReno = id => { S.renos = S.renos.filter(r => r.id !== id); };
+/* Doorstep — Find tenants, Contracts, Chores, People, Weekly check-up, Settings, tenant page */
+
+/* ---------------- Find tenants ---------------- */
+const CH = [
+  ['fb', 'Facebook Marketplace', 'Free', 'https://www.facebook.com/marketplace/create/rental', 'The busiest place for rooms in Toronto. Answer messages fast — speed wins.'],
+  ['kijiji', 'Kijiji', 'Free (paid boost optional)', 'https://www.kijiji.ca/p-select-category.html', 'Use the “Room Rentals & Roommates” category for rooms. Re-post weekly.'],
+  ['fbg', 'Facebook housing groups', 'Free', 'https://www.facebook.com/search/groups/?q=toronto%20rooms%20for%20rent', 'Join 3–4 Toronto / North York / York University housing groups and post there.'],
+  ['cl', 'Craigslist Toronto', 'Free', 'https://post.craigslist.org/c/tor', 'Smaller audience, but takes two minutes.'],
+  ['zumper', 'Zumper + PadMapper', 'Free', 'https://www.zumper.com/', 'One post shows on both. Better for the whole apartment.'],
+  ['liv', 'liv.rent', 'Free', 'https://liv.rent/', 'Verified renters. Better for the whole apartment.'],
+  ['roomies', 'Roomies.ca', 'Free (paid upgrade optional)', 'https://www.roomies.ca/', 'Made for rooms in shared houses.'],
+  ['p4s', 'Places4Students / college housing boards', 'Paid (small fee)', 'https://www.places4students.com/', 'Reaches York University and Seneca students near North York.'],
+  ['rentals', 'Rentals.ca', 'Paid', 'https://rentals.ca/', 'Big audience for whole apartments. Check the current price first.'],
+  ['kboost', 'Kijiji “Top Ad” boost', 'Paid (about $15–$35 a week)', 'https://www.kijiji.ca/', 'Keeps the ad at the top of the list for 7 days.'],
+  ['meta', 'Instagram + Facebook paid ad', 'Paid (you choose the budget)', 'https://www.facebook.com/business/ads', 'See the cost planner below.'],
+  ['agent', 'Real estate agent (MLS / Realtor.ca)', 'Paid (often one month of rent)', 'https://www.realtor.ca/', 'Only makes sense for the whole apartment.']
+];
+const RISKY = [
+  [/\b(fe)?males?\s+only\b|\b(girls?|boys?|wom[ae]n|m[ae]n|ladies)\s+only\b/i, '“Female only / male only” — not allowed in Ontario unless the owner lives in the home and shares the kitchen or washroom.'],
+  [/students?\s+only|professionals?\s+only|adults?\s+only|no\s+(kids|children|famil)/i, '“Students only”, “professionals only”, “no children” — these can be discrimination (age, family status). Describe the home instead of the person.'],
+  [/citizens?\s+only|canadians?\s+only|no\s+(odsp|ow\b|welfare|social assistance)/i, 'You cannot refuse people because of citizenship or because they receive public assistance.'],
+  [/(damage|security)\s+deposit/i, 'Damage or security deposits are illegal in Ontario. You may only take last month’s rent and a refundable key deposit.']
+];
+function makeAd(u) {
+  const p = byId(S.properties, u.prop), s = S.settings;
+  return { avail: today(), ch: {}, title: `${money(u.rent)} – ${u.desc ? u.desc.split(/[,.]/)[0] : u.name} in ${p.address.split(',')[0]}`,
+    body: `${u.desc || u.name}.\n\nRent: ${money(u.rent)} per month. First and last month required.\nAvailable: ${nice(today())}\nArea: ${p.address}\n\n` +
+      (p.floors.length ? `About the house:\n- Quiet, respectful home with ${unitsOf(p.id).length} private rooms\n- Shared kitchen and washroom, cleaned every week on a fair rotation\n- Security camera at the outside entrance\n\n` : '') +
+      `To apply, please send:\n- A few words about yourself and your work or studies\n- Your move-in date and how long you plan to stay\n\nViewings by appointment. Proof of income and references are asked from every applicant.\n\nContact: ${[s.landlord, s.phone].filter(Boolean).join(' · ') || '(add your name and phone in Settings)'}` };
+}
+V.market = pf => {
+  const empty = propsOf(pf.id).flatMap(p => unitsOf(p.id).filter(u => !u.tenant));
+  const pl = (S.ui.plan ??= { daily: 8, days: 7, cpc: 1.2, rate: 6, rent: 0 });
+  const rent = pl.rent || (empty[0] ? empty[0].rent : 1000), spend = pl.daily * pl.days, clicks = pl.cpc ? spend / pl.cpc : 0, inq = clicks * pl.rate / 100, perDay = rent / 30;
+  const tot = {}; Object.values(S.ads).forEach(a => Object.entries(a.ch || {}).forEach(([k, c]) => { (tot[k] ??= { leads: 0, spent: 0 }); tot[k].leads += c.leads || 0; tot[k].spent += c.spent || 0; }));
+  const ranked = Object.entries(tot).filter(([, v]) => v.leads || v.spent).sort((a, b) => b[1].leads - a[1].leads);
+  return `<h1>Find tenants</h1><div class="sub">The app writes the ad. You post it in a few taps and record who replies, so you learn which place works best.</div>
+  ${empty.length ? '' : '<div class="card"><h2>Every room is rented 🎉</h2><p>When a room becomes empty, it will show up here with a ready-made ad.</p></div>'}
+  ${empty.map(u => {
+    const p = byId(S.properties, u.prop), ad = S.ads[u.id], b = `ads.${u.id}`;
+    if (!ad) return `<div class="card"><h2>${esc(u.name)} — ${esc(p.name)}</h2><p>Empty. Costs about <b>${money(u.rent / 30)}</b> a day.</p>${field('Describe the room in one line', txt(`units:${u.id}.desc`, u.desc, 'Furnished room, shared kitchen…'))}<p style="margin-top:.8rem"><button class="btn" data-act="makeAd" data-arg="${u.id}">✍️ Write the ad for me</button></p></div>`;
+    const warn = RISKY.filter(([re]) => re.test(ad.title + ' ' + ad.body));
+    return `<div class="card"><div class="row sp"><h2 style="margin:0">${esc(u.name)} — ${esc(p.name)}</h2><span class="chip b">Empty · ${money(u.rent / 30)} a day</span></div>
+    <h3>1. Check the ad</h3>${field('Headline', txt(b + '.title', ad.title))}<label class="f" style="margin-top:.6rem">Ad text<textarea data-bind="${b}.body">${esc(ad.body)}</textarea></label>
+    ${warn.map(w => `<div class="note b">⚠️ ${w[1]}</div>`).join('') || '<div class="note">✓ No risky wording found. Add 8 or more bright photos — ads with good photos get far more replies.</div>'}
+    <div class="row"><button class="btn" data-act="copyAd" data-arg="${u.id}">📋 Copy the ad</button><button class="btn ghost" data-act="makeAd" data-arg="${u.id}" data-confirm="1">Start the ad over</button></div>
+    <h3>2. Post it — free places first</h3><div class="tw"><table><tr><th>Where</th><th>Cost</th><th>Status</th><th class="n">Replies</th><th class="n">Spent ($)</th><th></th></tr>
+    ${CH.map(([id, name, cost, url, tip]) => { const c = (ad.ch || {})[id] || {}, age = c.posted ? daysBetween(c.posted, today()) : null;
+      return `<tr><td><b>${name}</b><div class="small">${tip}</div></td><td><span class="chip ${cost.startsWith('Free') ? 'g' : 'w'}">${cost}</span></td>
+      <td>${age === null ? '<span class="chip">Not posted</span>' : age > 7 ? `<span class="chip w">Posted ${age} days ago — refresh</span>` : `<span class="chip g">Posted ${age ? age + ' days ago' : 'today'}</span>`}</td>
+      <td class="n"><button class="btn sm sec" data-act="lead" data-arg="${u.id}|${id}" aria-label="Add one reply for ${name}">＋1</button> <b>${c.leads || 0}</b></td>
+      <td class="n">${cost.startsWith('Paid') || c.spent ? num(`${b}.ch.${id}.spent`, c.spent, 80) : '—'}</td>
+      <td><button class="btn sm" data-act="post" data-arg="${u.id}|${id}">Copy ad & open</button> <button class="btn sm ghost" data-act="posted" data-arg="${u.id}|${id}">${age === null ? 'I posted it' : 'Posted again'}</button></td></tr>`; }).join('')}</table></div>
+    <h3>3. Found someone?</h3><p>Add the person under <b>Tenants & links</b>, then choose them for this room under <b>Properties</b>. The ad leaves this list.</p></div>`;
+  }).join('')}
+  <div class="card"><h2>Which place works best for you</h2>${ranked.length ? `<div class="tw"><table><tr><th>Place</th><th class="n">Replies</th><th class="n">Spent</th><th class="n">Cost per reply</th></tr>${ranked.map(([k, v]) => `<tr><td>${(CH.find(c => c[0] === k) || [0, k])[1]}</td><td class="n">${v.leads}</td><td class="n">${money(v.spent)}</td><td class="n">${v.leads ? money(v.spent / v.leads, 2) : '—'}</td></tr>`).join('')}</table></div>` : '<p>Press <b>＋1</b> each time someone replies to an ad. After a few weeks this table shows where your tenants really come from, so you stop wasting time and money on the others.</p>'}</div>
+  <div class="card"><h2>Paid ads: what would it cost?</h2><p>For Instagram and Facebook ads. Change the numbers to try different budgets.</p>
+  <div class="form">${field('Budget per day ($)', num('ui.plan.daily', pl.daily))}${field('How many days', num('ui.plan.days', pl.days))}${field('Cost per click ($) — Canada is usually $0.70–$2', num('ui.plan.cpc', pl.cpc))}${field('Clickers who message you (%)', num('ui.plan.rate', pl.rate))}${field('Rent of the empty room ($)', num('ui.plan.rent', rent))}</div>
+  <div class="grid"><div class="stat"><div class="l">You spend</div><div class="v">${money(spend)}</div><div class="h">${pl.days} days</div></div><div class="stat"><div class="l">People who click</div><div class="v">${Math.round(clicks)}</div></div><div class="stat"><div class="l">People who message you</div><div class="v">${inq.toFixed(0)}</div><div class="h">about ${inq ? money(spend / inq, 2) : '—'} each</div></div><div class="stat"><div class="l">Worth it if the room fills</div><div class="v">${Math.ceil(spend / perDay)} days sooner</div><div class="h">an empty room costs ${money(perDay)} a day</div></div></div>
+  <div class="note"><b>Cheapest plan that usually works</b><ol class="tight"><li><b>Days 1–7:</b> post on all the free places. Reply within the hour. Most rooms fill here for $0.</li><li><b>Day 8:</b> still empty? Refresh every ad, improve the photos, and pay for one Kijiji Top Ad.</li><li><b>Day 14:</b> still empty? Run a small Instagram + Facebook ad ($5–$10 a day for a week) or lower the rent by $25–$50. Lowering rent by $50 costs $600 a year; one empty month costs ${money(rent)}.</li></ol>
+  Meta treats rental ads as a “housing” special category: you cannot target by age or gender, and the area must be at least a 25 km circle. Pick “Messages” as the goal so people write to you directly.</div></div>
+  <div class="card"><h2>Choosing a tenant fairly</h2><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:240px"><b>You may ask for</b><ul class="tight"><li>Proof of income (pay stubs, job letter)</li><li>A credit check, with their written consent</li><li>References from past landlords</li><li>ID to confirm who they are</li><li>Move-in date and how many people will live there</li></ul></div><div style="flex:1;min-width:240px"><b>Do not ask about</b><ul class="tight"><li>Religion, race, country of origin, citizenship</li><li>Age, marriage, children, pregnancy</li><li>Disability or health</li><li>Whether they receive public assistance</li></ul></div></div><p class="small">Use the same questions for every applicant and keep short notes on why you chose someone. That is your protection if anyone complains.</p></div>`;
+};
+A.makeAd = uid_ => { S.ads[uid_] = makeAd(byId(S.units, uid_)); };
+const chOf = arg => { const [u, c] = arg.split('|'); return ((S.ads[u].ch ??= {})[c] ??= {}); };
+A.copyAd = u => { copy(S.ads[u].title + '\n\n' + S.ads[u].body); toast('Ad copied. Paste it into the site.'); return false; };
+A.post = arg => { const [u, c] = arg.split('|'); A.copyAd(u); window.open(CH.find(x => x[0] === c)[3], '_blank', 'noopener'); return false; };
+A.posted = arg => { chOf(arg).posted = today(); };
+A.lead = arg => { const c = chOf(arg); c.leads = (c.leads || 0) + 1; };
+
+/* ---------------- Contracts & rules ---------------- */
+const DOCK = { lease: 'Lease details sheet', rules: 'House rules and cleaning agreement', camera: 'Outdoor camera notice', welcome: 'Welcome letter', custom: 'My own contract' };
+function docTpl(kind, t) {
+  const u = tenantUnit(t.id), p = byId(S.properties, u.prop), s = S.settings, fl = byId(p.floors, u.floor), LL = s.landlord || '[LANDLORD NAME]';
+  const sign = `\n\nLandlord: ${LL}\nTenant: ${t.name}\nDate: ${nice(today())}\n\nTenant signature: ______________________`;
+  const fill = x => x.replace(/\[TENANT\]/g, t.name).replace(/\[ROOM\]/g, u.name).replace(/\[ADDRESS\]/g, p.address).replace(/\[RENT\]/g, money(u.rent)).replace(/\[LANDLORD\]/g, LL).replace(/\[DATE\]/g, nice(today()));
+  const B = {
+    lease: `LEASE DETAILS — to copy into the Ontario Standard Lease (Form 2229E)\n\nOntario law requires the government's Standard Lease form for this tenancy. Use these details to fill it in, then attach the house rules and camera notice as "Additional Terms" (Section 15).\n\nLandlord: ${LL}\nTenant: ${t.name}\nRental unit: ${u.name}, ${p.address}\nStart date: ${nice(t.leaseStart)}\nRent: ${money(u.rent)} per month, due on the 1st\nLast month's rent deposit: ${money(t.deposit || u.rent)} (interest is paid on this every year)\nKey deposit: refundable, no more than the cost of replacing the key\nIncluded: heat, hydro, water, internet, use of shared kitchen and washroom\nSmoking: not allowed inside the home\nTenant insurance: required` + sign,
+    rules: `HOUSE RULES AND CLEANING AGREEMENT\n${p.address} — ${u.name}\n\nThese rules are Additional Terms to the lease. They do not take away any right under the Residential Tenancies Act.\n\n1. CLEANING ROTATION\nEach week, one tenant on ${fl ? 'the ' + fl.name.toLowerCase() : 'each floor'} cleans all shared areas of that floor. Turns rotate so everyone does the same amount. The week runs Monday to Sunday and cleaning must be finished by Sunday 8 pm. The current schedule is always on your private tenant page.\n\nWhat the weekly clean includes:\n${(fl ? fl.tasks : '').split('\n').filter(Boolean).map(x => '  - ' + x).join('\n')}\n\n2. GARBAGE\nOne tenant each week takes the bins to the curb the evening before pickup (${DAYS[p.wasteDay ?? 2]}) and brings them back the same day. Green bin goes out every week. Garbage and recycling alternate.\n\n3. EVERY DAY\n  - Wash your own dishes the same day\n  - Wipe the stove and counter after cooking\n  - Leave the washroom dry and clear of your things\n  - Quiet hours 10 pm to 7 am\n  - No smoking or vaping inside\n  - Overnight guests: tell your housemates; no more than a few nights a month\n\n4. SWAPPING A TURN\nYou may swap with another tenant if you both agree and tell the landlord.\n\n5. IF A TURN IS MISSED\nThe landlord will remind the tenant once. If shared areas are still left unclean, the landlord may hire a cleaner and will discuss the cost with the tenant responsible.` + sign,
+    camera: `NOTICE AND ACKNOWLEDGEMENT — OUTDOOR SECURITY CAMERA\n${p.address}\n\n1. There is a security camera on the OUTSIDE of the building. It covers the entrance, driveway and yard only.\n2. There are NO cameras inside the home, in any bedroom, washroom, kitchen or hallway.\n3. The camera does not point into any window or private room.\n4. Purpose: safety of tenants and the property (break-ins, package theft, damage). It is not used to watch tenants' daily comings and goings.\n5. Sound recording is turned off.\n6. Recordings are kept for no more than 30 days and then erased, unless needed for a police report, insurance claim or legal matter.\n7. Only the landlord can see recordings. They are shared only with police, insurers or a tribunal when required.\n8. A tenant may ask to see footage of themselves by writing to the landlord.\n\nBy signing, the tenant confirms they have been told about the outdoor camera and understand how it is used. This is a notice, not a waiver: it does not remove any privacy right the tenant has under Ontario law.` + sign,
+    welcome: `Welcome, ${t.name}!\n\nHere is what you need for ${u.name} at ${p.address}.\n\nRent: ${money(u.rent)} on the 1st of each month.\nGarbage day: ${DAYS[p.wasteDay ?? 2]}.\nCleaning: one person cleans the shared areas each week, in turns. Your turns are on your private tenant page.\nRepairs or problems: contact ${LL}${s.phone ? ' at ' + s.phone : ''}${s.email ? ' or ' + s.email : ''}. For emergencies (no heat, water leak, fire), call right away.\n\nThank you for helping keep this a clean, quiet and friendly home.\n\n${LL}`,
+    custom: fill(s.customTpl || 'Paste your own contract under “My own contract wording” below, then make this document again.')
+  };
+  return { id: uid(), tenant: t.id, kind, title: DOCK[kind], body: B[kind], status: 'draft' };
+}
+const STAT = { draft: ['', 'Draft — only you can see it'], approved: ['i', 'Approved — ready to send'], sent: ['w', 'Sent — waiting for signature'], signed: ['g', 'Signed'] };
+V.contracts = pf => {
+  const ts = pfTenants(pf.id); if (!ts.some(t => t.id === S.ui.tenant)) S.ui.tenant = ts[0] ? ts[0].id : '';
+  const t = byId(S.tenants, S.ui.tenant), docs = t ? S.docs.filter(d => d.tenant === t.id) : [];
+  const CK = [['licence', 'Toronto multi-tenant house licence (needed for 4 or more rented rooms; North York allows up to 6)'], ['fire', 'Fire safety plan, working smoke and CO alarms on every floor, clear exits'], ['insure', 'Landlord insurance that knows rooms are rented separately'], ['lease', 'Every tenant has the Ontario Standard Lease (Form 2229E)'], ['info', 'Every tenant got the LTB “Information for New Tenants” page'], ['deposit', 'Only last month’s rent + refundable key deposit taken (no damage deposit)'], ['tinsure', 'Tenants asked to carry tenant insurance']];
+  return `<h1>Contracts & rules</h1><div class="sub">Make a document, read it, approve it, send it. Nothing reaches a tenant until you approve it.</div>
+  <div class="card"><h2>Documents for one tenant</h2>${ts.length ? `<div class="row">${field('Tenant', sel('ui.tenant', S.ui.tenant, ts.map(x => [x.id, x.name + ' — ' + tenantUnit(x.id).name])))}</div>
+  <p style="margin-top:.8rem">Make a new one:</p><div class="row">${Object.entries(DOCK).map(([k, l]) => `<button class="btn sec sm" data-act="newDoc" data-arg="${k}">＋ ${l}</button>`).join('')}</div>` : '<p>Add tenants first under Tenants & links.</p>'}
+  ${docs.map(d => `<div style="border-top:1px solid var(--line);margin-top:1rem;padding-top:1rem"><div class="row sp">${d.status === 'draft' ? txt(`docs:${d.id}.title`, d.title) : `<b>${esc(d.title)}</b>`}<span class="chip ${STAT[d.status][0]}">${STAT[d.status][1]}</span></div>
+    ${d.status === 'draft' ? `<textarea style="min-height:14rem;margin-top:.5rem" data-bind="docs:${d.id}.body" aria-label="Document text">${esc(d.body)}</textarea>` : `<div class="doc" style="margin-top:.5rem">${esc(d.body)}</div>`}
+    <div class="row" style="margin-top:.6rem">${d.status === 'draft' ? `<button class="btn" data-act="docStatus" data-arg="${d.id}|approved">✓ I approve this</button>` : ''}${d.status === 'approved' ? `<button class="btn" data-act="sendDoc" data-arg="${d.id}">✉️ Send to ${esc(t.name)}</button>` : ''}${d.status === 'sent' ? `<button class="btn" data-act="docStatus" data-arg="${d.id}|signed">Tenant has signed</button><button class="btn sec" data-act="sendDoc" data-arg="${d.id}">Send again</button>` : ''}${d.status !== 'draft' ? `<button class="btn ghost" data-act="docStatus" data-arg="${d.id}|draft">Edit again</button>` : ''}<button class="btn ghost" data-act="printDoc" data-arg="${d.id}">🖨️ Print / PDF</button><button class="btn del" data-act="delDoc" data-arg="${d.id}" data-confirm="1">Delete</button></div></div>`).join('')}</div>
+  <div class="card"><h2>Do it for everyone at once</h2><p>Makes a draft for every tenant who does not have one yet. You still approve each one.</p><div class="row"><button class="btn sec" data-act="bulkDoc" data-arg="camera">Camera notice for all</button><button class="btn sec" data-act="bulkDoc" data-arg="rules">House rules for all</button><button class="btn sec" data-act="bulkApprove">Approve all drafts</button></div></div>
+  <div class="card"><h2>My own contract wording</h2><p class="small">Paste your contract here. Write [TENANT], [ROOM], [ADDRESS], [RENT], [LANDLORD] and [DATE] where those should appear, and the app fills them in for each person.</p><textarea data-bind="settings.customTpl" aria-label="My own contract wording">${esc(S.settings.customTpl || '')}</textarea></div>
+  ${propsOf(pf.id).map(p => `<div class="card"><h2>Safety checklist — ${esc(p.name)}</h2>${CK.filter(c => c[0] !== 'licence' || unitsOf(p.id).length >= 4).map(([k, l]) => `<label class="todo"><input type="checkbox" data-bind="properties:${p.id}.compliance.${k}" ${(p.compliance || {})[k] ? 'checked' : ''}><span class="t">${l}</span></label>`).join('')}</div>`).join('')}
+  <div class="card"><h2>Rent increases</h2><div class="tw"><table><tr><th>Tenant</th><th class="n">Rent</th><th>Earliest new rent date</th><th class="n">Most you can add</th><th>Give Form N1 by</th></tr>${ts.map(x => { const i = increaseInfo(x); return i ? `<tr><td>${esc(x.name)}</td><td class="n">${money(tenantUnit(x.id).rent)}</td><td>${nice(i.next)}</td><td class="n">${money(i.up, 2)} (${i.g}%)</td><td>${nice(i.noticeBy)} ${i.daysToNotice <= 30 ? '<span class="chip w">soon</span>' : ''}</td></tr>` : ''; }).join('')}</table></div><p class="small">Rent can go up once every 12 months, with 90 days’ written notice on Form N1. Homes first lived in after 15 Nov 2018 are not limited by the guideline.</p></div>
+  <div class="card"><h2>Landlord and Tenant Board (LTB) — quick guide</h2><div class="tw"><table><tr><th>Situation</th><th>Form</th><th>Notice</th></tr>
+  ${[['Raise the rent', 'N1', '90 days'], ['Tenant has not paid rent', 'N4, then L1 to apply', '14 days to pay'], ['Tenant disturbs others or causes damage', 'N5, then L2', '20 days (7 to fix it)'], ['Tenant is always late with rent', 'N8, then L2', '60 days'], ['You or close family will move in', 'N12, then L2', '60 days + one month’s rent paid to tenant'], ['Tenant wants to leave', 'N9 (tenant gives it)', '60 days'], ['You both agree to end it', 'N11', 'any date you agree'], ['Enter the room for repairs or viewing', 'Written note', '24 hours, between 8 am and 8 pm']].map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>
+  <p><a href="https://tribunalsontario.ca/ltb/forms/" target="_blank" rel="noopener">All LTB forms</a> · <a href="https://www.ontario.ca/page/guide-ontarios-standard-lease" target="_blank" rel="noopener">Standard Lease guide</a> · <a href="https://www.toronto.ca/community-people/housing-shelter/rental-housing-rights-information/multi-tenant-rooming-houses/multi-tenant-house-owners-operators/" target="_blank" rel="noopener">Toronto multi-tenant house licence</a></p>
+  <p class="small">You can never change the locks, remove belongings or cut services yourself. Only the LTB can end a tenancy. This page is a plain-language guide, not legal advice — for a dispute, speak to a licensed paralegal.</p></div>`;
+};
+A.newDoc = k => { S.docs.unshift(docTpl(k, byId(S.tenants, S.ui.tenant))); };
+A.bulkDoc = k => { let n = 0; pfTenants(curPf().id).forEach(t => { if (!S.docs.some(d => d.tenant === t.id && d.kind === k)) { S.docs.unshift(docTpl(k, t)); n++; } }); toast(n ? `${n} draft${n > 1 ? 's' : ''} made` : 'Everyone already has one'); };
+A.bulkApprove = () => { const ids = pfTenants(curPf().id).map(t => t.id); let n = 0; S.docs.forEach(d => { if (d.status === 'draft' && ids.includes(d.tenant)) { d.status = 'approved'; n++; } }); toast(`${n} approved`); };
+A.docStatus = arg => { const [id, st] = arg.split('|'); byId(S.docs, id).status = st; byId(S.docs, id)[st + 'At'] = today(); };
+A.delDoc = id => { S.docs = S.docs.filter(d => d.id !== id); };
+A.printDoc = id => { const d = byId(S.docs, id), w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to print'); return false; } w.document.write(`<title>${esc(d.title)}</title><pre style="white-space:pre-wrap;font:15px/1.5 Georgia,serif;max-width:720px;margin:40px auto">${esc(d.body)}</pre>`); w.document.close(); w.print(); return false; };
+A.sendDoc = async id => {
+  const d = byId(S.docs, id), t = byId(S.tenants, d.tenant);
+  if (!t.email) { toast(`Add an email for ${t.name} under Tenants & links first`); return; }
+  d.status = 'sent'; d.sentAt = today();
+  let body = `Hello ${t.name},\n\nPlease read "${d.title}". `;
+  if (isHosted()) { const link = await tenantLink(t); await copy(link); body += `Open your private page to read and sign it:\n${link.length < 1500 ? link : '(the link is copied — paste it here)'}\n`; }
+  else body += `Reply to this email with "I agree" and your full name to sign.\n\n-----\n${d.body.slice(0, 1400)}${d.body.length > 1400 ? '\n… (full copy attached)' : ''}\n-----\n`;
+  body += `\nThank you,\n${S.settings.landlord || ''}`;
+  location.href = `mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent(d.title)}&body=${encodeURIComponent(body)}`;
+  toast('Your email opened with the message ready. Press Send there.');
+};
+
+/* ---------------- Cleaning & garbage ---------------- */
+V.chores = pf => {
+  const ps = propsOf(pf.id).filter(p => p.floors.length);
+  return `<h1>Cleaning & garbage</h1><div class="sub">One person cleans their whole floor each week, in turns. Garbage duty rotates through the whole house, and never lands on the same person’s cleaning week.</div>
+  ${ps.length ? '' : '<div class="card"><p>This is for shared houses. Add floors to a property (under Properties) to get a schedule.</p></div>'}
+  ${ps.map(p => { const rows = schedule(p, 8), b = `properties:${p.id}`;
+    return `<div class="card"><div class="row sp"><h2 style="margin:0">${esc(p.name)}</h2><div class="row noprint"><button class="btn sec sm" data-act="copyWeek" data-arg="${p.id}">📋 Copy this week’s reminder</button><button class="btn sec sm" data-act="print">🖨️ Print</button></div></div>
+    <div class="week small"><b>Week of</b><b>Garbage to the curb</b><b>Cleaning</b></div>
+    ${rows.map((r, i) => `<div class="week ${i ? '' : 'now'}"><div><b>${nice(r.mon).replace(/, \d{4}/, '')}</b>${i ? '' : ' <span class="chip i">this week</span>'}</div>
+      <div>${r.garbage ? esc(r.garbage.name) : '—'}<div class="small">${r.waste} + green bin · out by ${DAYS[mod((p.wasteDay ?? 2) - 1, 7)]} night</div></div>
+      <div>${r.clean.map(c => { const k = `${p.id}|${c.f.id}|${r.mon}`; return `<label class="row" style="gap:.4rem">${i < 2 ? `<input type="checkbox" data-act="choreDone" data-arg="${k}" ${S.chores[k] ? 'checked' : ''} aria-label="Done">` : ''}<span><b>${esc(c.f.name)}:</b> ${c.t ? esc(c.t.name) : '<i>nobody yet</i>'}</span></label>`; }).join('')}</div></div>`).join('')}
+    <div class="noprint"><h3>Garbage settings</h3><div class="form">${field('Pickup day', sel(b + '.wasteDay', p.wasteDay ?? 2, DAYS.map((d, i) => [i, d]), 'num'))}<div class="f">This week the truck takes<div class="row"><b style="color:var(--ink)">${rows[0].waste}</b><button class="btn sm sec" data-act="flipWaste" data-arg="${p.id}">No, it is ${rows[0].waste === 'Garbage' ? 'recycling' : 'garbage'} week</button></div></div></div>
+    <p class="small">Check your street’s day on the City of Toronto <a href="https://www.toronto.ca/services-payments/recycling-organics-garbage/houses/collection-schedule/" target="_blank" rel="noopener">collection schedule</a>. Bins must be at the curb before 7 am on pickup day.</p>
+    <h3>What “cleaning the floor” means</h3>${p.floors.map(f => `<div class="form">${field('Floor name', txt(`${b}.floors:${f.id}.name`, f.name))}<label class="f" style="grid-column:1/-1">Tasks — one per line<textarea data-bind="${b}.floors:${f.id}.tasks">${esc(f.tasks)}</textarea></label></div>`).join('')}</div></div>`; }).join('')}
+  <div class="card noprint"><h2>What makes a cleaning rota actually work</h2><ul class="tight"><li><b>One clear owner each week.</b> “Everyone cleans a bit” fails; one named person does not.</li><li><b>A written checklist.</b> People disagree about what “clean” means. The task list ends the argument.</li><li><b>A fixed deadline</b> (Sunday 8 pm) and a tick-box, so a missed week is obvious early.</li><li><b>Supplies provided by you.</b> Spray, cloths, vacuum and bags cost about $15 a month and remove the most common excuse.</li><li><b>Swaps allowed</b> when both people agree.</li><li><b>A paid deep clean every 3 months</b> keeps standards from sliding.</li></ul></div>`;
+};
+A.choreDone = k => { if (S.chores[k]) delete S.chores[k]; else S.chores[k] = today(); };
+A.copyWeek = pid => { const p = byId(S.properties, pid), r = schedule(p, 1)[0];
+  copy(`🏠 ${p.name} — week of ${nice(r.mon)}\n\n🗑️ ${r.waste} + green bin: ${r.garbage ? r.garbage.name : '—'} (to the curb ${DAYS[mod((p.wasteDay ?? 2) - 1, 7)]} night)\n${r.clean.map(c => `🧹 ${c.f.name} cleaning: ${c.t ? c.t.name : '—'} (done by Sunday 8 pm)`).join('\n')}\n\nThank you!`);
+  toast('Copied. Paste it into your house group chat.'); return false; };
+
+/* ---------------- Tenants & links ---------------- */
+V.people = pf => {
+  const ts = S.tenants.filter(t => { const u = tenantUnit(t.id); return !u || byId(S.properties, u.prop).pf === pf.id; });
+  return `<h1>Tenants & links</h1><div class="sub">Each tenant gets a private page with only their own documents and their own floor’s schedule. They cannot see anyone else’s contract or any of your money.</div>
+  ${isHosted() ? '' : `<div class="note w"><b>One step left before links work for tenants:</b> right now the app lives only on this computer, so a link would only open here. Once the app is put online (free), “Copy private link” gives a link you can send by text or email. Until then, use <b>Preview</b> to see their page and <b>Print / PDF</b> for documents.</div>`}
+  ${ts.map(t => { const u = tenantUnit(t.id), b = `tenants:${t.id}`;
+    return `<div class="card"><div class="row sp"><h2 style="margin:0">${esc(t.name)}</h2>${u ? `<span class="chip i">${esc(u.name)} · ${money(u.rent)}</span>` : '<span class="chip w">No room yet — choose one under Properties</span>'}</div>
+    <div class="form">${field('Full name', txt(b + '.name', t.name))}${field('Email', txt(b + '.email', t.email, 'name@example.com', 'email'))}${field('Phone', txt(b + '.phone', t.phone, '', 'tel'))}${field('Moved in', txt(b + '.leaseStart', t.leaseStart, '', 'date'))}${field('Last rent increase', txt(b + '.lastIncrease', t.lastIncrease, '', 'date'))}${field('Last month’s rent held ($)', num(b + '.deposit', t.deposit))}</div>
+    <div class="row">${u ? `<button class="btn" data-act="tLink" data-arg="${t.id}">🔗 Copy private link</button><button class="btn sec" data-act="tPreview" data-arg="${t.id}">Preview their page</button>` : ''}<button class="btn del" data-act="delTenant" data-arg="${t.id}" data-confirm="1">Remove tenant</button></div>
+    ${t.deposit ? `<p class="small">Deposit interest owed this year: ${money(t.deposit * (GUIDELINE[new Date().getFullYear()] ?? 1.9) / 100, 2)} (same % as the rent guideline).</p>` : ''}</div>`; }).join('')}
+  <button class="btn" data-act="addTenant">＋ Add a tenant</button>
+  <div class="card" style="margin-top:1rem"><h2>Who can see what</h2><div class="tw"><table><tr><th></th><th>You (admin)</th><th>A tenant with their link</th></tr>${[['Rent, mortgage, bills, returns', '✓', '✗'], ['Their own contract and notices', '✓', '✓'], ['Other tenants’ contracts', '✓', '✗'], ['Cleaning and garbage turns for their floor', '✓', '✓ (with housemates’ names)'], ['Change anything', '✓', '✗']].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table></div><p class="small">A tenant link carries only that tenant’s information inside it. If you change a document or the schedule, send them a fresh link.</p></div>`;
+};
+A.addTenant = () => { S.tenants.push({ id: uid(), name: 'New tenant', email: '', phone: '', leaseStart: today(), deposit: 0, lastIncrease: '' }); };
+A.delTenant = id => { S.units.forEach(u => { if (u.tenant === id) u.tenant = ''; }); S.tenants = S.tenants.filter(t => t.id !== id); S.docs = S.docs.filter(d => d.tenant !== id); };
+A.tLink = async id => { await copy(await tenantLink(byId(S.tenants, id))); toast(isHosted() ? 'Private link copied. Paste it in a text or email.' : 'Copied — but it only opens on this computer until the app is online.'); };
+A.tPreview = async id => { const w = window.open('', '_blank'), l = await tenantLink(byId(S.tenants, id)); if (w) w.location.href = l; else location.href = l; };
+
+/* ---------------- Weekly check-up ---------------- */
+function habitTips() {
+  const u = S.usage, tips = [], last14 = Object.keys(u.days).filter(d => daysBetween(d, today()) < 14).length;
+  const HINT = { money: 'mark rent as paid so late payers stand out', market: 'get a ready-made ad for an empty room', reno: 'test a renovation idea before spending', chores: 'see whose turn it is this week', contracts: 'send the camera notice and house rules', people: 'save tenant emails and private links' };
+  Object.entries(HINT).forEach(([k, h]) => { const v = u.views[k]; if (!v) tips.push(`You have not opened <b>${NAV.find(n => n[0] === k)[2]}</b> yet. It lets you ${h}.`); else if (daysBetween(v.last, today()) > 21) tips.push(`It has been ${daysBetween(v.last, today())} days since you opened <b>${NAV.find(n => n[0] === k)[2]}</b>.`); });
+  const ads = Object.values(S.ads), posted = ads.some(a => Object.values(a.ch || {}).some(c => c.posted)), leads = ads.some(a => Object.values(a.ch || {}).some(c => c.leads));
+  if (posted && !leads) tips.push('You posted ads but recorded no replies. Press ＋1 for each reply so the app can tell you which site is worth your time.');
+  const mk = monthKey(), paid = Object.values(S.payments[mk] || {}), late = paid.filter(d => Number(d.slice(8)) > 5).length;
+  if (late >= 2) tips.push(`${late} rents were marked paid after the 5th this month. Ask tenants to set up automatic e-transfer for the 1st.`);
+  return { tips, last14 };
+}
+function runQC(auto) {
+  const fs = S.portfolios.flatMap(findings), score = qcScore(findings(curPf()));
+  S.qc.last = today(); S.qc.reports.unshift({ date: today(), score, n: fs.length, auto: !!auto }); S.qc.reports = S.qc.reports.slice(0, 26);
+}
+V.qc = pf => {
+  const fs = findings(pf), score = qcScore(fs), h = habitTips(), prev = S.qc.reports[1];
+  const grp = [['high', 'Do these first'], ['med', 'Do these soon'], ['low', 'When you have time']];
+  return `<h1>Weekly check-up</h1><div class="sub">Once a week the app checks everything for you: money, empty rooms, paperwork, and how you use the app.</div>
+  <div class="card"><div class="row sp"><div><div class="l small">Health score for ${esc(pf.name)}</div><div class="big ${score >= 80 ? 'pos' : score < 50 ? 'neg' : ''}">${score}<span style="font-size:1.2rem;color:var(--mute)"> / 100</span></div><div class="small">Last check: ${nice(S.qc.last)}${prev ? ` · before that: ${prev.score}` : ''} · next automatic check: ${nice(iso(new Date(pDate(S.qc.last || today()).getTime() + 7 * 864e5)))}</div></div><button class="btn" data-act="runQC">Check again now</button></div></div>
+  ${grp.map(([s, l]) => { const x = fs.filter(f => f.sev === s); return x.length ? `<div class="card"><h2>${l} (${x.length})</h2>${x.map(todoRow).join('')}</div>` : ''; }).join('') || '<div class="card"><p>Nothing to fix. Well done. 🌿</p></div>'}
+  <div class="card"><h2>Your habits</h2><p>You opened the app on <b>${h.last14}</b> of the last 14 days.${h.last14 < 2 ? ' A quick look twice a week is enough to catch late rent and stale ads.' : ''}</p>
+  ${h.tips.length ? `<ul class="tight">${h.tips.map(t => `<li>${t}</li>`).join('')}</ul>` : '<p>You are using every part of the app. Nothing to suggest.</p>'}
+  <p class="small">The Home page shortcuts re-order themselves to match the screens you open most.</p></div>
+  ${S.qc.reports.length > 1 ? `<div class="card"><h2>Past check-ups</h2><div class="tw"><table><tr><th>Date</th><th class="n">Score</th><th class="n">Items found</th></tr>${S.qc.reports.slice(0, 10).map(r => `<tr><td>${nice(r.date)}${r.auto ? '' : ' (manual)'}</td><td class="n">${r.score}</td><td class="n">${r.n}</td></tr>`).join('')}</table></div></div>` : ''}`;
+};
+A.runQC = () => { runQC(false); toast('Check-up done'); };
+
+/* ---------------- Settings ---------------- */
+V.settings = () => `<h1>Settings</h1><div class="sub">Your details appear on ads and documents.</div>
+  <div class="card"><h2>About you</h2><div class="form">${field('Your name', txt('settings.landlord', S.settings.landlord))}${field('Email', txt('settings.email', S.settings.email, '', 'email'))}${field('Phone', txt('settings.phone', S.settings.phone, '', 'tel'))}${field('PIN to open the app (optional)', txt('settings.pin', S.settings.pin, 'e.g. 4 digits', 'password'))}</div><p class="small">The PIN keeps family or visitors from opening the app on this computer. Leave it empty for no PIN.</p></div>
+  <div class="card"><h2>Backup</h2><p>Everything is saved in this browser on this computer. Save a backup file every week so nothing is lost if the computer breaks.</p><p class="small">Last backup: ${nice(S.settings.lastBackup)}</p>
+  <div class="row"><button class="btn" data-act="backup">⬇️ Save a backup file</button><label class="btn sec" style="cursor:pointer">⬆️ Open a backup file<input type="file" id="restore" accept=".json" hidden></label></div></div>
+  <div class="card"><h2>Start over</h2><p>Erases everything in the app on this computer and brings back the example numbers.</p><button class="btn del" data-act="reset" data-confirm="1">Erase everything</button></div>`;
+A.backup = () => { S.settings.lastBackup = today(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' })); a.download = `doorstep-backup-${today()}.json`; a.click(); toast('Backup saved to your Downloads folder'); };
+A.reset = () => { S = seed(); };
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'restore' && el.files[0]) el.files[0].text().then(tx => { try { const d = JSON.parse(tx); if (!d.v || !d.properties) throw 0; S = d; save(); render(); toast('Backup opened'); } catch (x) { toast('That file is not a Doorstep backup'); } });
+});
+A.flipWaste = pid => { const p = byId(S.properties, pid); p.wasteFlip = !p.wasteFlip; };
+
+/* ---------------- The tenant's private page ---------------- */
+let TP = null;
+function renderTenant() {
+  const d = TP, me = x => x === d.n ? `<span class="me">${esc(x)} (you)</span>` : esc(x), signed = JSON.parse(localStorage.getItem('doorstep.signed') || '{}');
+  document.title = 'Your home — ' + d.u;
+  $('#app').innerHTML = `<main style="margin:0 auto;max-width:760px"><h1>Hello, ${esc(d.n.split(' ')[0])} 👋</h1><div class="sub">${esc(d.u)} · ${esc(d.a)} · this page is private to you</div>
+  ${d.sch.length ? `<div class="card"><h2>This week</h2><p>🧹 Cleaning (${esc(d.fl)}): ${me(d.sch[0].c)}<br>🗑️ ${d.sch[0].w} + green bin to the curb (night before ${d.day}): ${me(d.sch[0].g)}</p></div>` : ''}
+  <div class="card"><h2>Your documents</h2>${d.docs.length ? d.docs.map((x, i) => `<h3>${esc(x.t)} ${x.s === 'signed' || signed[x.t] ? '<span class="chip g">Signed</span>' : '<span class="chip w">Please read and sign</span>'}</h3><div class="doc">${esc(x.b)}</div>${x.s === 'signed' ? '' : `<p><button class="btn" data-act="tSign" data-arg="${i}">✍️ I have read this and I agree</button></p>`}`).join('') : '<p>No documents yet.</p>'}</div>
+  ${d.sch.length ? `<div class="card"><h2>Your cleaning and garbage turns</h2><div class="week small"><b>Week of</b><b>Garbage to the curb</b><b>Cleans ${esc(d.fl)}</b></div>${d.sch.map((r, i) => `<div class="week ${i ? '' : 'now'}"><b>${nice(r.m).replace(/, \d{4}/, '')}</b><div>${me(r.g)}<div class="small">${r.w} + green bin</div></div><div>${me(r.c)}</div></div>`).join('')}
+  <h3>What the weekly clean includes</h3><ul class="tight">${d.tasks.split('\n').filter(Boolean).map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="small">Finish by Sunday 8 pm. Need to swap a week? Agree with a housemate and tell the landlord.</p></div>` : ''}
+  <div class="card"><h2>Need something?</h2><p>${esc(d.ll || 'Your landlord')}${d.lp ? ` · <a href="tel:${esc(d.lp)}">${esc(d.lp)}</a>` : ''}${d.le ? ` · <a href="mailto:${esc(d.le)}">${esc(d.le)}</a>` : ''}</p><p class="small">Page prepared ${nice(d.made)}.</p></div></main>`;
+}
+A.tSign = i => { const x = TP.docs[i], s = JSON.parse(localStorage.getItem('doorstep.signed') || '{}'); s[x.t] = today(); localStorage.setItem('doorstep.signed', JSON.stringify(s));
+  const body = `I, ${TP.n}, have read and agree to "${x.t}" for ${TP.u}, ${TP.a}.\n\nDate: ${nice(today())}\nFull name: ${TP.n}`;
+  if (TP.le) location.href = `mailto:${encodeURIComponent(TP.le)}?subject=${encodeURIComponent('Signed: ' + x.t)}&body=${encodeURIComponent(body)}`; else { copy(body); toast('Confirmation copied. Send it to your landlord.'); }
+  renderTenant(); return false; };
+
+/* ---------------- start ---------------- */
+async function boot() {
+  const m = location.hash.match(/^#t=(.+)/);
+  if (m) { try { TP = await unpack(m[1]); renderTenant(); } catch (e) { $('#app').innerHTML = '<main><div class="card lock"><h2>This link is not complete</h2><p>Please ask your landlord to send it again.</p></div></main>'; } return; }
+  load();
+  if (!S.qc.last || daysBetween(S.qc.last, today()) >= 7) runQC(true);
+  track(S.ui.view); save(); render();
+}
+window.addEventListener('hashchange', () => location.reload());
+boot();
+</script></body></html>
