@@ -193,9 +193,24 @@ V.settings = () => `<h1>Settings</h1><div class="sub">Your details appear on ads
   <div class="card"><h2>About you</h2><div class="form">${field('Your name', txt('settings.landlord', S.settings.landlord))}${field('Email', txt('settings.email', S.settings.email, '', 'email'))}${field('Phone', txt('settings.phone', S.settings.phone, '', 'tel'))}${field('PIN to open the app (optional)', txt('settings.pin', S.settings.pin, 'e.g. 4 digits', 'password'))}</div><p class="small">The PIN keeps family or visitors from opening the app on this computer. Leave it empty for no PIN.</p></div>
   <div class="card"><h2>Backup</h2><p>Everything is saved in this browser on this computer. Save a backup file every week so nothing is lost if the computer breaks.</p><p class="small">Last backup: ${nice(S.settings.lastBackup)}</p>
   <div class="row"><button class="btn" data-act="backup">⬇️ Save a backup file</button><label class="btn sec" style="cursor:pointer">⬆️ Open a backup file<input type="file" id="restore" accept=".json" hidden></label></div></div>
+  <div class="card"><h2>Use it on another device</h2><p>Sends a copy of everything to your own email as a link. Open that email on the new phone or computer, tap the link, and all your numbers appear there.</p>
+  <div class="row"><button class="btn" data-act="emailCopy">✉️ Send a copy to my email</button></div><p class="small">The link contains all your information, so only send it to yourself. Each device keeps its own copy: after changing things on one device, send a fresh copy to the other.</p></div>
   <div class="card"><h2>Start over</h2><p>Erases everything in the app on this computer and brings back the example numbers.</p><button class="btn del" data-act="reset" data-confirm="1">Erase everything</button></div>`;
 A.backup = () => { S.settings.lastBackup = today(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' })); a.download = `doorstep-backup-${today()}.json`; a.click(); toast('Backup saved to your Downloads folder'); };
 A.reset = () => { S = seed(); };
+let PEND = null;
+A.emailCopy = async () => {
+  if (!isHosted()) { toast('This works from the web address, not from the file'); return; }
+  if (!S.settings.email) { toast('Type your email under “About you” first'); return; }
+  S.settings.lastBackup = today(); save();
+  const link = location.href.split('#')[0] + '#r=' + await pack(S);
+  await copy(link);
+  const short = link.length < 1800;
+  location.href = `mailto:${encodeURIComponent(S.settings.email)}?subject=${encodeURIComponent('My Doorstep copy — ' + nice(today()))}&body=${encodeURIComponent('Open this link on the new device to load everything:\n\n' + (short ? link : '(paste the link here — it is already copied)') + '\n')}`;
+  toast(short ? 'Your email opened. Press Send.' : 'Your email opened. Paste the copied link into it, then press Send.');
+};
+A.restoreYes = () => { S = PEND; PEND = null; unlocked = false; history.replaceState(null, '', location.pathname); toast('Your copy is now on this device'); };
+A.restoreNo = () => { PEND = null; history.replaceState(null, '', location.pathname); load(); };
 document.addEventListener('change', e => {
   const el = e.target;
   if (el.id === 'restore' && el.files[0]) el.files[0].text().then(tx => { try { const d = JSON.parse(tx); if (!d.v || !d.properties) throw 0; S = d; save(); render(); toast('Backup opened'); } catch (x) { toast('That file is not a Doorstep backup'); } });
@@ -223,6 +238,13 @@ A.tSign = i => { const x = TP.docs[i], s = JSON.parse(localStorage.getItem('door
 async function boot() {
   const m = location.hash.match(/^#t=(.+)/);
   if (m) { try { TP = await unpack(m[1]); renderTenant(); } catch (e) { $('#app').innerHTML = '<main><div class="card lock"><h2>This link is not complete</h2><p>Please ask your landlord to send it again.</p></div></main>'; } return; }
+  const r = location.hash.match(/^#r=(.+)/);
+  if (r) {
+    try { PEND = await unpack(r[1]); if (!PEND.v || !PEND.properties) throw 0;
+      $('#app').innerHTML = `<main><div class="card lock"><h1>🏠 Doorstep</h1><p>Open your saved copy from <b>${nice(PEND.settings.lastBackup)}</b> on this device?</p><p class="small">It replaces anything already saved in this browser.</p><p class="row" style="justify-content:center"><button class="btn" data-act="restoreYes">Yes, open it here</button><button class="btn sec" data-act="restoreNo">No</button></p></div></main>`;
+    } catch (e) { $('#app').innerHTML = '<main><div class="card lock"><h2>This link is not complete</h2><p>Send yourself a fresh copy from Settings and try again.</p></div></main>'; }
+    return;
+  }
   load();
   if (!S.qc.last || daysBetween(S.qc.last, today()) >= 7) runQC(true);
   track(S.ui.view); save(); render();
