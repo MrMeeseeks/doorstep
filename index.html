@@ -69,6 +69,10 @@ ul.tight{margin:.3rem 0;padding-left:1.2rem}ul.tight li{margin:.15rem 0}
  .week{grid-template-columns:1fr}
 }
 @media print{nav,.top,.btn,.banner,.noprint{display:none!important}body{background:#fff}main{padding:0;max-width:none}.card,.stat{break-inside:avoid}}
+.ph{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.4rem 0 .8rem}
+.ph figure{margin:0;position:relative}
+.ph img{width:104px;height:78px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block}
+.ph .x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--bad);color:#fff;font-size:.75rem;cursor:pointer;line-height:1}
 </style></head><body><div id="app"></div><script>
 /* Doorstep — core: data, storage, money math, chores, checks */
 const KEY = 'doorstep.v1';
@@ -405,6 +409,7 @@ function propCard(p) {
   <h3>Rooms / units</h3><div class="tw"><table><tr><th>Name</th>${p.floors.length ? '<th>Floor</th>' : ''}<th class="n">Rent now ($)</th><th class="n">Market rent ($)</th><th>Who lives there</th><th></th></tr>
   ${unitsOf(p.id).map(u => `<tr><td>${txt(`units:${u.id}.name`, u.name)}</td>${p.floors.length ? `<td>${sel(`units:${u.id}.floor`, u.floor, [['', '—'], ...p.floors.map(x => [x.id, x.name])])}</td>` : ''}<td class="n">${num(`units:${u.id}.rent`, u.rent, 100)}</td><td class="n">${num(`units:${u.id}.market`, u.market, 100)}</td><td>${sel(`units:${u.id}.tenant`, u.tenant, [['', '— empty —'], ...S.tenants.filter(t => t.id === u.tenant || free.includes(t)).map(t => [t.id, t.name])])}</td><td><button class="btn del" data-act="delUnit" data-arg="${u.id}" data-confirm="1">Remove</button></td></tr>`).join('')}
   <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
+  <h3>Room photos</h3>${unitsOf(p.id).map(u => `<div><b>${esc(u.name)}</b>${photoStrip(u)}</div>`).join('')}
   <h3>Other</h3><label class="row"><input type="checkbox" data-bind="${b}.camera" ${p.camera ? 'checked' : ''}> There is a security camera outside this property</label>
   <p style="margin-top:1rem"><button class="btn del" data-act="delProp" data-arg="${p.id}" data-confirm="1">Delete this property</button></p></div>`;
 }
@@ -416,7 +421,7 @@ A.delProp = id => { S.units = S.units.filter(u => u.prop !== id); S.properties =
 A.addExp = pid => { byId(S.properties, pid).expenses.push({ id: uid(), name: 'New bill', amount: 0, per: 'm' }); };
 A.delExp = arg => { const [pid, eid] = arg.split('|'), p = byId(S.properties, pid); p.expenses = p.expenses.filter(e => e.id !== eid); };
 A.addUnit = pid => { const p = byId(S.properties, pid); S.units.push({ id: uid(), prop: pid, name: 'Room ' + (unitsOf(pid).length + 1), floor: p.floors[0] ? p.floors[0].id : '', rent: 0, market: 0, tenant: '', desc: '' }); };
-A.delUnit = id => { S.units = S.units.filter(u => u.id !== id); delete S.ads[id]; };
+A.delUnit = id => { S.units = S.units.filter(u => u.id !== id); delete S.ads[id]; delete PH[id]; savePhotos(); };
 A.addFloor = pid => { const p = byId(S.properties, pid); p.floors.push({ id: uid(), name: 'Floor ' + (p.floors.length + 1), tasks: 'Kitchen\nWashroom\nCorridor\nVacuum and mop\nEmpty bins' }); toast('Floor added. Rename it under Cleaning & garbage.'); };
 
 /* ---------------- Money ---------------- */
@@ -525,14 +530,15 @@ V.market = pf => {
     <h3>1. Check the ad</h3>${field('Headline', txt(b + '.title', ad.title))}<label class="f" style="margin-top:.6rem">Ad text<textarea data-bind="${b}.body">${esc(ad.body)}</textarea></label>
     ${warn.map(w => `<div class="note b">⚠️ ${w[1]}</div>`).join('') || '<div class="note">✓ No risky wording found. Add 8 or more bright photos — ads with good photos get far more replies.</div>'}
     <div class="row"><button class="btn" data-act="copyAd" data-arg="${u.id}">📋 Copy the ad</button><button class="btn ghost" data-act="makeAd" data-arg="${u.id}" data-confirm="1">Start the ad over</button></div>
-    <h3>2. Post it — free places first</h3><div class="tw"><table><tr><th>Where</th><th>Cost</th><th>Status</th><th class="n">Replies</th><th class="n">Spent ($)</th><th></th></tr>
+    <h3>2. Photos for the ad</h3><p class="small">Add photos here once and keep them with the room. Tap a photo to save it to this device, then upload it on each site.</p>${photoStrip(u)}
+    <h3>3. Post it — free places first</h3><div class="tw"><table><tr><th>Where</th><th>Cost</th><th>Status</th><th class="n">Replies</th><th class="n">Spent ($)</th><th></th></tr>
     ${CH.map(([id, name, cost, url, tip]) => { const c = (ad.ch || {})[id] || {}, age = c.posted ? daysBetween(c.posted, today()) : null;
       return `<tr><td><b>${name}</b><div class="small">${tip}</div></td><td><span class="chip ${cost.startsWith('Free') ? 'g' : 'w'}">${cost}</span></td>
       <td>${age === null ? '<span class="chip">Not posted</span>' : age > 7 ? `<span class="chip w">Posted ${age} days ago — refresh</span>` : `<span class="chip g">Posted ${age ? age + ' days ago' : 'today'}</span>`}</td>
       <td class="n"><button class="btn sm sec" data-act="lead" data-arg="${u.id}|${id}" aria-label="Add one reply for ${name}">＋1</button> <b>${c.leads || 0}</b></td>
       <td class="n">${cost.startsWith('Paid') || c.spent ? num(`${b}.ch.${id}.spent`, c.spent, 80) : '—'}</td>
       <td><button class="btn sm" data-act="post" data-arg="${u.id}|${id}">Copy ad & open</button> <button class="btn sm ghost" data-act="posted" data-arg="${u.id}|${id}">${age === null ? 'I posted it' : 'Posted again'}</button></td></tr>`; }).join('')}</table></div>
-    <h3>3. Found someone?</h3><p>Add the person under <b>Tenants & links</b>, then choose them for this room under <b>Properties</b>. The ad leaves this list.</p></div>`;
+    <h3>4. Found someone?</h3><p>Add the person under <b>Tenants & links</b>, then choose them for this room under <b>Properties</b>. The ad leaves this list.</p></div>`;
   }).join('')}
   <div class="card"><h2>Which place works best for you</h2>${ranked.length ? `<div class="tw"><table><tr><th>Place</th><th class="n">Replies</th><th class="n">Spent</th><th class="n">Cost per reply</th></tr>${ranked.map(([k, v]) => `<tr><td>${(CH.find(c => c[0] === k) || [0, k])[1]}</td><td class="n">${v.leads}</td><td class="n">${money(v.spent)}</td><td class="n">${v.leads ? money(v.spent / v.leads, 2) : '—'}</td></tr>`).join('')}</table></div>` : '<p>Press <b>＋1</b> each time someone replies to an ad. After a few weeks this table shows where your tenants really come from, so you stop wasting time and money on the others.</p>'}</div>
   <div class="card"><h2>Paid ads: what would it cost?</h2><p>For Instagram and Facebook ads. Change the numbers to try different budgets.</p>
@@ -669,16 +675,41 @@ V.qc = pf => {
 };
 A.runQC = () => { runQC(false); toast('Check-up done'); };
 
+/* ---------------- Room photos (kept on this device, shrunk to save space) ---------------- */
+let PH = {};
+try { PH = JSON.parse(localStorage.getItem('doorstep.photos')) || {}; } catch (e) { }
+function savePhotos() { try { localStorage.setItem('doorstep.photos', JSON.stringify(PH)); return true; } catch (e) { return false; } }
+function photoStrip(u) {
+  const l = PH[u.id] || [];
+  return `<div class="ph">${l.map((d, i) => `<figure><a href="${d}" download="${esc(u.name.replace(/\W+/g, '-'))}-${i + 1}.jpg" title="Tap to save this photo"><img src="${d}" alt="${esc(u.name)} photo ${i + 1}"></a><button class="x" data-act="delPhoto" data-arg="${u.id}|${i}" aria-label="Remove photo ${i + 1} of ${esc(u.name)}">✕</button></figure>`).join('')}<label class="btn sec sm" style="cursor:pointer">📷 Add photos<input type="file" accept="image/*" multiple hidden data-photo="${u.id}"></label>${l.length ? '' : '<span class="small">No photos yet</span>'}</div>`;
+}
+function shrink(file) {
+  return new Promise((res, rej) => { const img = new Image();
+    img.onload = () => { const k = Math.min(1, 1000 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', 0.62)); };
+    img.onerror = rej; img.src = URL.createObjectURL(file); });
+}
+document.addEventListener('change', async e => {
+  const el = e.target; if (!el.dataset || !el.dataset.photo) return;
+  const l = (PH[el.dataset.photo] ??= []); let skipped = 0, full = false;
+  for (const f of el.files) {
+    if (l.length >= 10) { skipped++; continue; }
+    try { l.push(await shrink(f)); if (!savePhotos()) { l.pop(); savePhotos(); full = true; break; } } catch (x) { skipped++; }
+  }
+  render();
+  toast(full ? 'This device has no more space for photos. Remove a few first.' : skipped ? `${skipped} could not be added (10 photos per room at most)` : 'Photos added');
+});
+A.delPhoto = arg => { const [u, i] = arg.split('|'); PH[u].splice(Number(i), 1); savePhotos(); };
+
 /* ---------------- Settings ---------------- */
 V.settings = () => `<h1>Settings</h1><div class="sub">Your details appear on ads and documents.</div>
   <div class="card"><h2>About you</h2><div class="form">${field('Your name', txt('settings.landlord', S.settings.landlord))}${field('Email', txt('settings.email', S.settings.email, '', 'email'))}${field('Phone', txt('settings.phone', S.settings.phone, '', 'tel'))}${field('PIN to open the app (optional)', txt('settings.pin', S.settings.pin, 'e.g. 4 digits', 'password'))}</div><p class="small">The PIN keeps family or visitors from opening the app on this computer. Leave it empty for no PIN.</p></div>
   <div class="card"><h2>Backup</h2><p>Everything is saved in this browser on this computer. Save a backup file every week so nothing is lost if the computer breaks.</p><p class="small">Last backup: ${nice(S.settings.lastBackup)}</p>
   <div class="row"><button class="btn" data-act="backup">⬇️ Save a backup file</button><label class="btn sec" style="cursor:pointer">⬆️ Open a backup file<input type="file" id="restore" accept=".json" hidden></label></div></div>
   <div class="card"><h2>Use it on another device</h2><p>Sends a copy of everything to your own email as a link. Open that email on the new phone or computer, tap the link, and all your numbers appear there.</p>
-  <div class="row"><button class="btn" data-act="emailCopy">✉️ Send a copy to my email</button></div><p class="small">The link contains all your information, so only send it to yourself. Each device keeps its own copy: after changing things on one device, send a fresh copy to the other.</p></div>
+  <div class="row"><button class="btn" data-act="emailCopy">✉️ Send a copy to my email</button></div><p class="small">The link contains all your information, so only send it to yourself. Each device keeps its own copy: after changing things on one device, send a fresh copy to the other. Room photos are too big for the link — use the backup file to move those.</p></div>
   <div class="card"><h2>Start over</h2><p>Erases everything in the app on this computer and brings back the example numbers.</p><button class="btn del" data-act="reset" data-confirm="1">Erase everything</button></div>`;
-A.backup = () => { S.settings.lastBackup = today(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' })); a.download = `doorstep-backup-${today()}.json`; a.click(); toast('Backup saved to your Downloads folder'); };
-A.reset = () => { S = seed(); };
+A.backup = () => { S.settings.lastBackup = today(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ ...S, photos: PH }, null, 1)], { type: 'application/json' })); a.download = `doorstep-backup-${today()}.json`; a.click(); toast('Backup saved to your Downloads folder'); };
+A.reset = () => { S = seed(); PH = {}; savePhotos(); };
 let PEND = null;
 A.emailCopy = async () => {
   if (!isHosted()) { toast('This works from the web address, not from the file'); return; }
@@ -694,7 +725,7 @@ A.restoreYes = () => { S = PEND; PEND = null; unlocked = false; history.replaceS
 A.restoreNo = () => { PEND = null; history.replaceState(null, '', location.pathname); load(); };
 document.addEventListener('change', e => {
   const el = e.target;
-  if (el.id === 'restore' && el.files[0]) el.files[0].text().then(tx => { try { const d = JSON.parse(tx); if (!d.v || !d.properties) throw 0; S = d; save(); render(); toast('Backup opened'); } catch (x) { toast('That file is not a Doorstep backup'); } });
+  if (el.id === 'restore' && el.files[0]) el.files[0].text().then(tx => { try { const d = JSON.parse(tx); if (!d.v || !d.properties) throw 0; PH = d.photos || {}; delete d.photos; savePhotos(); S = d; save(); render(); toast('Backup opened'); } catch (x) { toast('That file is not a Doorstep backup'); } });
 });
 A.flipWaste = pid => { const p = byId(S.properties, pid); p.wasteFlip = !p.wasteFlip; };
 

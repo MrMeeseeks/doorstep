@@ -68,3 +68,7 @@ ul.tight{margin:.3rem 0;padding-left:1.2rem}ul.tight li{margin:.15rem 0}
  .week{grid-template-columns:1fr}
 }
 @media print{nav,.top,.btn,.banner,.noprint{display:none!important}body{background:#fff}main{padding:0;max-width:none}.card,.stat{break-inside:avoid}}
+.ph{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.4rem 0 .8rem}
+.ph figure{margin:0;position:relative}
+.ph img{width:104px;height:78px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block}
+.ph .x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--bad);color:#fff;font-size:.75rem;cursor:pointer;line-height:1}

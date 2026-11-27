@@ -88,6 +88,7 @@ function propCard(p) {
   <h3>Rooms / units</h3><div class="tw"><table><tr><th>Name</th>${p.floors.length ? '<th>Floor</th>' : ''}<th class="n">Rent now ($)</th><th class="n">Market rent ($)</th><th>Who lives there</th><th></th></tr>
   ${unitsOf(p.id).map(u => `<tr><td>${txt(`units:${u.id}.name`, u.name)}</td>${p.floors.length ? `<td>${sel(`units:${u.id}.floor`, u.floor, [['', '—'], ...p.floors.map(x => [x.id, x.name])])}</td>` : ''}<td class="n">${num(`units:${u.id}.rent`, u.rent, 100)}</td><td class="n">${num(`units:${u.id}.market`, u.market, 100)}</td><td>${sel(`units:${u.id}.tenant`, u.tenant, [['', '— empty —'], ...S.tenants.filter(t => t.id === u.tenant || free.includes(t)).map(t => [t.id, t.name])])}</td><td><button class="btn del" data-act="delUnit" data-arg="${u.id}" data-confirm="1">Remove</button></td></tr>`).join('')}
   <tr><td colspan="6"><button class="btn ghost" data-act="addUnit" data-arg="${p.id}">＋ Add a room</button> <button class="btn ghost" data-act="addFloor" data-arg="${p.id}">＋ Add a floor</button> <span class="small">Add new people under “Tenants & links”, then pick them here.</span></td></tr></table></div>
+  <h3>Room photos</h3>${unitsOf(p.id).map(u => `<div><b>${esc(u.name)}</b>${photoStrip(u)}</div>`).join('')}
   <h3>Other</h3><label class="row"><input type="checkbox" data-bind="${b}.camera" ${p.camera ? 'checked' : ''}> There is a security camera outside this property</label>
   <p style="margin-top:1rem"><button class="btn del" data-act="delProp" data-arg="${p.id}" data-confirm="1">Delete this property</button></p></div>`;
 }
@@ -99,7 +100,7 @@ A.delProp = id => { S.units = S.units.filter(u => u.prop !== id); S.properties =
 A.addExp = pid => { byId(S.properties, pid).expenses.push({ id: uid(), name: 'New bill', amount: 0, per: 'm' }); };
 A.delExp = arg => { const [pid, eid] = arg.split('|'), p = byId(S.properties, pid); p.expenses = p.expenses.filter(e => e.id !== eid); };
 A.addUnit = pid => { const p = byId(S.properties, pid); S.units.push({ id: uid(), prop: pid, name: 'Room ' + (unitsOf(pid).length + 1), floor: p.floors[0] ? p.floors[0].id : '', rent: 0, market: 0, tenant: '', desc: '' }); };
-A.delUnit = id => { S.units = S.units.filter(u => u.id !== id); delete S.ads[id]; };
+A.delUnit = id => { S.units = S.units.filter(u => u.id !== id); delete S.ads[id]; delete PH[id]; savePhotos(); };
 A.addFloor = pid => { const p = byId(S.properties, pid); p.floors.push({ id: uid(), name: 'Floor ' + (p.floors.length + 1), tasks: 'Kitchen\nWashroom\nCorridor\nVacuum and mop\nEmpty bins' }); toast('Floor added. Rename it under Cleaning & garbage.'); };
 
 /* ---------------- Money ---------------- */
